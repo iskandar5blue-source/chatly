@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatly</title>
+<style>
+  :root {
+    --accent: #2aabee; --accent-dark: #1e96d1; --text: #222; --muted: #8a94a0;
+    --bubble-out: #effdde; --bubble-in: #fff; --border: #e4e8ec; --danger: #e53935; --ok: #43a047;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text); height: 100vh; overflow: hidden; background: #f4f6f8; }
+  button, input, textarea { font: inherit; }
+  button { cursor: pointer; }
+  .hidden { display: none !important; }
+
+  /* AUTH */
+  #auth { height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
+          background: linear-gradient(135deg, #2aabee, #229ed9 60%, #1a7fb8); }
+  .auth-card { background: #fff; width: 100%; max-width: 380px; border-radius: 16px; padding: 32px 28px; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+  .auth-card h1 { font-size: 26px; color: var(--accent-dark); margin-bottom: 4px; }
+  .auth-card p.sub { color: var(--muted); margin-bottom: 22px; font-size: 14px; }
+  .tabs { display: flex; background: #f0f3f6; border-radius: 10px; padding: 4px; margin-bottom: 18px; }
+  .tabs button { flex: 1; border: none; background: transparent; padding: 9px; border-radius: 8px; color: var(--muted); font-weight: 600; }
+  .tabs button.active { background: #fff; color: var(--accent-dark); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .field input { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-size: 15px; }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--accent); color: #fff; font-size: 16px; font-weight: 600; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .error { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+  /* APP */
+  #app { height: 100vh; display: flex; }
+  .sidebar { width: 320px; background: #fff; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .side-header { padding: 14px 16px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: space-between; }
+  .side-header .title { font-weight: 700; font-size: 17px; }
+  .side-header .who { font-size: 12px; opacity: .9; }
+  .icon-btn { background: rgba(255,255,255,.18); border: none; color: #fff; width: 34px; height: 34px; border-radius: 50%; font-size: 16px; }
+  .icon-btn:hover { background: rgba(255,255,255,.3); }
+  .chat-list { flex: 1; overflow-y: auto; }
+  .chat-item { display: flex; gap: 12px; padding: 11px 14px; cursor: pointer; align-items: center; border-bottom: 1px solid #f2f4f6; }
+  .chat-item:hover { background: #f5f9fc; }
+  .chat-item.active { background: #e3f2fb; }
+  .avatar { width: 46px; height: 46px; border-radius: 50%; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 17px; }
+  .chat-meta { flex: 1; min-width: 0; }
+  .chat-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .chat-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-time { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .chat-preview { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; flex: 1; }
+  .typing-txt { color: var(--accent-dark); }
+  .unread { background: var(--accent); color: #fff; border-radius: 10px; font-size: 11px; padding: 1px 7px; font-weight: 700; }
+  .empty-list { padding: 30px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #dfe6ec; }
+  .main-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); background: #f0f3f6; }
+  #chat-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .chat-header { background: #fff; padding: 10px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+  .chat-header .info { flex: 1; min-width: 0; }
+  .chat-header .hname { font-weight: 600; font-size: 16px; }
+  .chat-header .hstatus { font-size: 13px; color: var(--muted); }
+  .chat-header .hstatus.typing { color: var(--accent-dark); }
+  .call-btns { display: flex; gap: 8px; }
+  .call-btns button { width: 38px; height: 38px; border-radius: 50%; border: none; background: #eef6fc; font-size: 17px; }
+  .call-btns button:hover { background: #d8ecfa; }
+  .back-btn { display: none; background: none; border: none; font-size: 20px; color: var(--accent-dark); padding: 0 6px; }
+
+  .messages { flex: 1; overflow-y: auto; padding: 16px 8%; display: flex; flex-direction: column; gap: 4px; }
+  .day-sep { align-self: center; background: rgba(0,0,0,.25); color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 10px; margin: 8px 0; }
+  .msg-row { display: flex; }
+  .msg-row.out { justify-content: flex-end; }
+  .bubble { max-width: 70%; padding: 7px 11px 4px; border-radius: 12px; background: var(--bubble-in); box-shadow: 0 1px 1px rgba(0,0,0,.06); word-wrap: break-word; white-space: pre-wrap; }
+  .msg-row.out .bubble { background: var(--bubble-out); }
+  .bubble .body { font-size: 15px; line-height: 1.35; }
+  .bubble .meta { font-size: 11px; color: var(--muted); text-align: right; margin-top: 2px; }
+  .bubble .meta .tick { color: var(--accent); margin-left: 3px; }
+  .call-log { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .call-log .bad { color: var(--danger); }
+  .typing-bubble { align-self: flex-start; background: #fff; padding: 10px 14px; border-radius: 12px; display: inline-flex; gap: 4px; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+  .typing-bubble span { width: 7px; height: 7px; background: #9aa5b1; border-radius: 50%; animation: bounce 1.2s infinite ease-in-out; }
+  .typing-bubble span:nth-child(2) { animation-delay: .2s; }
+  .typing-bubble span:nth-child(3) { animation-delay: .4s; }
+  @keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-5px); opacity: 1; } }
+
+  .composer { background: #fff; padding: 10px 14px; display: flex; gap: 10px; align-items: flex-end; border-top: 1px solid var(--border); }
+  .composer textarea { flex: 1; resize: none; border: 1px solid var(--border); border-radius: 20px; padding: 10px 16px; outline: none; max-height: 120px; min-height: 42px; background: #f7f9fb; }
+  .composer textarea:focus { border-color: var(--accent); background: #fff; }
+  .send-btn { width: 42px; height: 42px; border-radius: 50%; border: none; background: var(--accent); color: #fff; font-size: 18px; flex-shrink: 0; }
+
+  /* MODALS */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+  .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 380px; padding: 22px; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+  .modal h3 { margin-bottom: 14px; color: var(--accent-dark); }
+  .modal .row { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-ghost { flex: 1; padding: 10px; border: 1px solid var(--border); background: #fff; border-radius: 10px; }
+  .btn-go { flex: 1; padding: 10px; border: none; background: var(--accent); color: #fff; border-radius: 10px; font-weight: 600; }
+  .acc-list { display: flex; flex-direction: column; gap: 6px; }
+  .acc-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; }
+  .acc-item:hover { background: #f5f9fc; }
+  .acc-item.current { border-color: var(--accent); background: #e9f6fd; }
+  .acc-item .avatar { width: 38px; height: 38px; font-size: 15px; }
+
+  /* CALL SCREEN */
+  #call { position: fixed; inset: 0; background: #1c2630; z-index: 80; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+  #remote-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; background: #000; }
+  #self-video { position: absolute; right: 16px; top: 16px; width: 140px; height: 190px; border-radius: 12px; object-fit: cover; display: none; background: #000; }
+  #call.video-on #remote-video, #call.video-on #self-video { display: block; }
+  #call.video-on .c-center { opacity: 0; pointer-events: none; }
+  .c-center { display: flex; flex-direction: column; align-items: center; }
+  .c-center .avatar { width: 120px; height: 120px; font-size: 44px; margin-bottom: 18px; }
+  .c-name { font-size: 24px; font-weight: 600; }
+  .c-status { font-size: 15px; opacity: .75; margin-top: 6px; min-height: 20px; }
+  .c-timer { font-size: 18px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .c-controls { position: absolute; bottom: 40px; display: flex; gap: 22px; z-index: 2; }
+  .c-controls button { width: 62px; height: 62px; border-radius: 50%; border: none; font-size: 22px; background: rgba(255,255,255,.15); color: #fff; }
+  .c-controls button.end { background: var(--danger); }
+  .c-controls button.on { background: #fff; color: #1c2630; }
+
+  #incoming { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); padding: 14px 16px; display: flex; gap: 14px; align-items: center; z-index: 90; min-width: 300px; max-width: 92vw; }
+  #incoming .info { flex: 1; }
+  #incoming .info small { color: var(--muted); }
+  #incoming button { width: 42px; height: 42px; border-radius: 50%; border: none; color: #fff; font-size: 18px; }
+  #incoming .yes { background: var(--ok); }
+  #incoming .no { background: var(--danger); }
+
+  #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 100; max-width: 90vw; text-align: center; }
+  #toast.show { opacity: 1; }
+
+  @media (max-width: 760px) {
+    .sidebar { width: 100%; }
+    .main { position: fixed; inset: 0; z-index: 20; }
+    .sidebar.hidden-mobile { display: none; }
+    .back-btn { display: inline-flex !important; }
+    .messages { padding: 12px 4%; }
+    .bubble { max-width: 85%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth">
+  <div class="auth-card">
+    <h1>Chatly</h1>
+    <p class="sub">Fast, private messaging with calls</p>
+    <div class="tabs">
+      <button id="tab-login" class="active">Log in</button>
+      <button id="tab-register">Register</button>
+    </div>
+    <form id="auth-form">
+      <div class="field"><label for="a-user">Login</label><input id="a-user" autocomplete="username" required></div>
+      <div class="field"><label for="a-pass">Password</label><input id="a-pass" type="password" autocomplete="current-password" required></div>
+      <div class="field hidden" id="confirm-wrap"><label for="a-pass2">Confirm password</label><input id="a-pass2" type="password" autocomplete="new-password"></div>
+      <button class="btn-primary" type="submit" id="auth-submit">Log in</button>
+      <div class="error" id="auth-error"></div>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-header">
+      <div><div class="title">Chatly</div><div class="who" id="who-line"></div></div>
+      <div style="display:flex; gap:8px;">
+        <button class="icon-btn" id="btn-accounts" title="Accounts">👤</button>
+        <button class="icon-btn" id="btn-new-chat" title="New chat">＋</button>
+        <button class="icon-btn" id="btn-logout" title="Log out">⎋</button>
+      </div>
+    </div>
+    <div class="chat-list" id="chat-list"></div>
+  </aside>
+
+  <main class="main">
+    <div class="main-empty" id="main-empty">Select a chat or start one with ＋</div>
+    <div id="chat-view" class="hidden">
+      <div class="chat-header">
+        <button class="back-btn" id="btn-back">←</button>
+        <div id="h-avatar"></div>
+        <div class="info">
+          <div class="hname" id="h-name"></div>
+          <div class="hstatus" id="h-status"></div>
+        </div>
+        <div class="call-btns">
+          <button id="btn-audio" title="Audio call">📞</button>
+          <button id="btn-video" title="Video call">🎥</button>
+        </div>
+      </div>
+      <div class="messages" id="messages"></div>
+      <div class="composer">
+        <textarea id="input" rows="1" placeholder="Message"></textarea>
+        <button class="send-btn" id="btn-send" title="Send">➤</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- NEW CHAT -->
+<div class="modal-bg hidden" id="modal-new">
+  <div class="modal">
+    <h3>Start a new chat</h3>
+    <div class="field"><label for="new-user">Username</label><input id="new-user" placeholder="username"></div>
+    <div class="error" id="new-error"></div>
+    <div class="row">
+      <button class="btn-ghost" id="new-cancel">Cancel</button>
+      <button class="btn-go" id="new-go">Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNTS -->
+<div class="modal-bg hidden" id="modal-accounts">
+  <div class="modal">
+    <h3>Your accounts</h3>
+    <div class="acc-list" id="acc-list"></div>
+    <div class="field" style="margin-top:14px">
+      <label for="acc-new">Create another account</label>
+      <input id="acc-new" placeholder="new username">
+    </div>
+    <div class="error" id="acc-error"></div>
+    <div class="row">
+      <button class="btn-ghost" id="acc-close">Close</button>
+      <button class="btn-go" id="acc-create">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALL SCREEN -->
+<div id="call" class="hidden">
+  <video id="remote-video" autoplay playsinline></video>
+  <video id="self-video" autoplay playsinline muted></video>
+  <div class="c-center">
+    <div id="c-avatar"></div>
+    <div class="c-name" id="c-name"></div>
+    <div class="c-status" id="c-status"></div>
+    <div class="c-timer" id="c-timer"></div>
+  </div>
+  <div class="c-controls">
+    <button id="c-mute" title="Mute">🎤</button>
+    <button id="c-cam" title="Camera">📷</button>
+    <button class="end" id="c-end" title="End call">⏹</button>
+  </div>
+</div>
+
+<!-- INCOMING CALL -->
+<div id="incoming" class="hidden">
+  <div id="in-avatar"></div>
+  <div class="info"><b id="in-name"></b><br><small id="in-type"></small></div>
+  <button class="no" id="in-decline" title="Decline">✖</button>
+  <button class="yes" id="in-accept" title="Accept">✔</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- state ---------- */
+  const $ = (id) => document.getElementById(id);
+  const COLORS = ["#e17076","#faa774","#6ab3f3","#a695e7","#7bc862","#ee7aae","#6ec9cb","#65aadd"];
+  const USER_RE = /^[a-zA-Z0-9_]{3,20}$/;
+  let token = localStorage.getItem("chatly_token");
+  let login = null;
+  let accounts = [];
+  let me = localStorage.getItem("chatly_account");   // currently active account
+  let active = null;                                  // chat partner being viewed
+  let chats = [];
+  let cache = {};                                     // partner -> messages
+  let es = null;
+  let typingUntil = {};                               // partner -> timestamp
+  let lastTypingSent = 0, typingStopTimer = null;
+
+  function colorFor(name) {
+    let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    return COLORS[h % COLORS.length];
+  }
+  function avatarHTML(name, extra) {
+    return `<div class="avatar ${extra || ""}" style="background:${colorFor(name)}">${escapeHTML(name.slice(0,2).toUpperCase())}</div>`;
+  }
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+  function fmtTime(ts) {
+    const d = new Date(ts);
+    return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+  }
+  function fmtDay(ts) {
+    const d = new Date(ts), now = new Date();
+    if (d.toDateString() === now.toDateString()) return "Today";
+    const y = new Date(now); y.setDate(now.getDate() - 1);
+    if (d.toDateString() === y.toDateString()) return "Yesterday";
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "long" });
+  }
+  function fmtDur(sec) {
+    sec = Math.round(sec); return Math.floor(sec/60) + ":" + String(sec%60).padStart(2,"0");
+  }
+  let toastTimer;
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+  }
+
+  /* ---------- API ---------- */
+  async function api(path, opts) {
+    opts = opts || {};
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = "Bearer " + token;
+    if (me) headers["X-Account"] = me;
+    const res = await fetch(path, {
+      method: opts.method || "GET",
+      headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const err = new Error(data.error || ("Error " + res.status));
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  /* ---------- AUTH ---------- */
+  let authMode = "login";
+  function setAuthMode(mode) {
+    authMode = mode;
+    $("tab-login").classList.toggle("active", mode === "login");
+    $("tab-register").classList.toggle("active", mode === "register");
+    $("confirm-wrap").classList.toggle("hidden", mode !== "register");
+    $("auth-submit").textContent = mode === "login" ? "Log in" : "Create account";
+    $("auth-error").textContent = "";
+  }
+  $("tab-login").onclick = () => setAuthMode("login");
+  $("tab-register").onclick = () => setAuthMode("register");
+
+  $("auth-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const user = $("a-user").value.trim();
+    const pass = $("a-pass").value;
+    const err = $("auth-error");
+    err.textContent = "";
+    try {
+      if (authMode === "register") {
+        if (!USER_RE.test(user)) throw new Error("Login: 3–20 letters, numbers or underscore.");
+        if (pass !== $("a-pass2").value) throw new Error("Passwords do not match.");
+        const data = await api("/api/register", { method: "POST", body: { login: user, password: pass } });
+        startSession(data);
+        toast("Account created. Welcome!");
+      } else {
+        const data = await api("/api/login", { method: "POST", body: { login: user, password: pass } });
+        startSession(data);
+      }
+      $("auth-form").reset();
+      setAuthMode("login");
+    } catch (ex) {
+      err.textContent = ex.message;
+    }
+  });
+
+  function startSession(data) {
+    token = data.token;
+    login = data.login;
+    accounts = data.accounts;
+    localStorage.setItem("chatly_token", token);
+    if (!me || !accounts.includes(me)) me = accounts[0];
+    localStorage.setItem("chatly_account", me);
+    enterApp();
+  }
+
+  $("btn-logout").onclick = async () => {
+    try { await api("/api/logout", { method: "POST" }); } catch (e) {}
+    localStorage.removeItem("chatly_token");
+    localStorage.removeItem("chatly_account");
+    location.reload();
+  };
+
+  /* ---------- APP ---------- */
+  function enterApp() {
+    $("auth").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    $("who-line").textContent = "@" + me;
+    active = null;
+    cache = {};
+    $("chat-view").classList.add("hidden");
+    $("main-empty").classList.remove("hidden");
+    $("sidebar").classList.remove("hidden-mobile");
+    connectEvents();
+    loadChats();
+  }
+
+  function connectEvents() {
+    if (es) es.close();
+    es = new EventSource("/api/events?token=" + encodeURIComponent(token) + "&account=" + encodeURIComponent(me));
+    es.addEventListener("chat", (e) => onChat(JSON.parse(e.data)));
+    es.addEventListener("typing", (e) => onTyping(JSON.parse(e.data)));
+    es.addEventListener("read", (e) => onRead(JSON.parse(e.data)));
+    es.addEventListener("signal", (e) => onSignal(JSON.parse(e.data)));
+  }
+
+  async function loadChats() {
+    try { chats = await api("/api/chats"); renderChats(); }
+    catch (e) { if (e.status === 401) location.reload(); }
+  }
+
+  function previewOf(c) {
+    if (typingUntil[c.name] > Date.now()) return `<span class="typing-txt">typing…</span>`;
+    const m = c.last;
+    if (!m) return "";
+    if (m.type === "call") {
+      const kind = m.callKind === "video" ? "Video call" : "Audio call";
+      if (m.callResult === "missed") return "📵 Missed " + kind.toLowerCase();
+      if (m.callResult === "declined") return "📵 " + kind + " declined";
+      return "📞 " + kind + " · " + fmtDur(m.callDur);
+    }
+    return (m.from === me ? "You: " : "") + escapeHTML(m.text);
+  }
+
+  function renderChats() {
+    const list = $("chat-list");
+    if (!chats.length) {
+      list.innerHTML = `<div class="empty-list">No chats yet.<br>Tap ＋ and enter a username.</div>`;
+      return;
+    }
+    list.innerHTML = chats.map(c => `
+      <div class="chat-item ${active === c.name ? "active" : ""}" data-name="${escapeHTML(c.name)}">
+        ${avatarHTML(c.name)}
+        <div class="chat-meta">
+          <div class="chat-top">
+            <div class="chat-name">@${escapeHTML(c.name)}</div>
+            <div class="chat-time">${c.last ? fmtTime(c.last.ts) : ""}</div>
+          </div>
+          <div class="chat-top">
+            <div class="chat-preview">${previewOf(c)}</div>
+            ${c.unread ? `<span class="unread">${c.unread}</span>` : ""}
+          </div>
+        </div>
+      </div>`).join("");
+    list.querySelectorAll(".chat-item").forEach(el => {
+      el.onclick = () => openChat(el.dataset.name);
+    });
+  }
+
+  async function openChat(name) {
+    active = name;
+    $("main-empty").classList.add("hidden");
+    $("chat-view").classList.remove("hidden");
+    $("h-avatar").innerHTML = avatarHTML(name);
+    $("h-name").textContent = "@" + name;
+    if (window.innerWidth <= 760) $("sidebar").classList.add("hidden-mobile");
+    renderHeader();
+    await loadMessages(name);
+    $("input").focus();
+  }
+
+  $("btn-back").onclick = () => {
+    active = null;
+    $("sidebar").classList.remove("hidden-mobile");
+    $("chat-view").classList.add("hidden");
+    $("main-empty").classList.remove("hidden");
+    renderChats();
+  };
+
+  async function loadMessages(name) {
+    try {
+      cache[name] = await api("/api/messages?with=" + encodeURIComponent(name));
+    } catch (e) {
+      cache[name] = [];
+      toast(e.message);
+    }
+    renderMessages();
+    loadChats();
+  }
+
+  function renderHeader() {
+    if (!active) return;
+    const st = $("h-status");
+    if (typingUntil[active] > Date.now()) {
+      st.textContent = "typing…"; st.classList.add("typing");
+    } else {
+      st.textContent = ""; st.classList.remove("typing");
+    }
+  }
+
+  function renderMessages() {
+    const box = $("messages");
+    if (!active) { box.innerHTML = ""; return; }
+    const msgs = cache[active] || [];
+    let html = "", lastDay = "";
+    for (const m of msgs) {
+      const day = fmtDay(m.ts);
+      if (day !== lastDay) { html += `<div class="day-sep">${day}</div>`; lastDay = day; }
+      const out = m.from === me;
+      let inner;
+      if (m.type === "call") {
+        const kind = m.callKind === "video" ? "Video call" : "Audio call";
+        const icon = m.callKind === "video" ? "🎥" : "📞";
+        let line;
+        if (m.callResult === "missed") line = `<span class="bad">Missed ${kind.toLowerCase()}</span>`;
+        else if (m.callResult === "declined") line = `<span class="bad">${kind} declined</span>`;
+        else line = `${kind} · ${fmtDur(m.callDur)}`;
+        inner = `<div class="call-log"><span>${icon}</span><span>${line}</span></div>`;
+      } else {
+        inner = `<div class="body">${escapeHTML(m.text)}</div>`;
+      }
+      const tick = out ? `<span class="tick">${m.read ? "✓✓" : "✓"}</span>` : "";
+      html += `<div class="msg-row ${out ? "out" : ""}"><div class="bubble">${inner}<div class="meta">${fmtTime(m.ts)}${tick}</div></div></div>`;
+    }
+    if (typingUntil[active] > Date.now()) {
+      html += `<div class="msg-row"><div class="typing-bubble"><span></span><span></span><span></span></div></div>`;
+    }
+    box.innerHTML = html;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  /* ---------- REALTIME EVENTS ---------- */
+  function onChat(msg) {
+    const partner = msg.from === me ? msg.to : msg.from;
+    if (cache[partner]) {
+      if (!cache[partner].some(m => m.id === msg.id)) cache[partner].push(msg);
+      if (active === partner) {
+        if (msg.to === me) { api("/api/messages?with=" + encodeURIComponent(partner)).then(all => { cache[partner] = all; renderMessages(); }); }
+        else renderMessages();
+      }
+    }
+    if (msg.to === me && active !== partner) {
+      const who = "@" + msg.from;
+      toast("New message from " + who);
+    }
+    loadChats();
+  }
+
+  function onTyping(d) {
+    typingUntil[d.from] = d.on ? Date.now() + 3000 : 0;
+    if (d.on) setTimeout(() => { renderChats(); if (active === d.from) { renderHeader(); renderMessages(); } }, 3100);
+    renderChats();
+    if (active === d.from) { renderHeader(); renderMessages(); }
+  }
+
+  function onRead(d) {
+    const msgs = cache[d.by];
+    if (!msgs) return;
+    msgs.forEach(m => { if (m.from === me) m.read = true; });
+    if (active === d.by) renderMessages();
+  }
+
+  /* ---------- SENDING ---------- */
+  async function sendMessage() {
+    const text = $("input").value.trim();
+    if (!text || !active) return;
+    $("input").value = ""; autoResize();
+    sendTypingState(false);
+    try {
+      const msg = await api("/api/messages", { method: "POST", body: { to: active, text } });
+      if (!cache[active]) cache[active] = [];
+      if (!cache[active].some(m => m.id === msg.id)) cache[active].push(msg);
+      renderMessages();
+      loadChats();
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+  $("btn-send").onclick = sendMessage;
+  $("input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  function autoResize() {
+    const el = $("input"); el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+  }
+  $("input").addEventListener("input", () => {
+    autoResize();
+    if (!active) return;
+    if (!$("input").value.trim()) { sendTypingState(false); return; }
+    const now = Date.now();
+    if (now - lastTypingSent > 1500) sendTypingState(true);
+    clearTimeout(typingStopTimer);
+    typingStopTimer = setTimeout(() => sendTypingState(false), 2000);
+  });
+  function sendTypingState(on) {
+    if (!active) return;
+    if (on) lastTypingSent = Date.now(); else lastTypingSent = 0;
+    api("/api/typing", { method: "POST", body: { to: active, on } }).catch(() => {});
+  }
+
+  /* ---------- NEW CHAT ---------- */
+  $("btn-new-chat").onclick = () => {
+    $("new-user").value = ""; $("new-error").textContent = "";
+    $("modal-new").classList.remove("hidden"); $("new-user").focus();
+  };
+  $("new-cancel").onclick = () => $("modal-new").classList.add("hidden");
+  $("new-go").onclick = async () => {
+    const name = $("new-user").value.trim().replace(/^@/, "");
+    const err = $("new-error");
+    if (!USER_RE.test(name)) { err.textContent = "Enter a valid username."; return; }
+    try {
+      const r = await api("/api/users/check?name=" + encodeURIComponent(name));
+      if (r.self) { err.textContent = "That's your own account."; return; }
+      if (!r.exists) { err.textContent = "No user with that username."; return; }
+      $("modal-new").classList.add("hidden");
+      openChat(name);
+    } catch (e) { err.textContent = e.message; }
+  };
+
+  /* ---------- ACCOUNTS ---------- */
+  async function refreshAccounts() {
+    const data = await api("/api/me");
+    accounts = data.accounts;
+  }
+  function renderAccounts() {
+    $("acc-list").innerHTML = accounts.map(a => `
+      <div class="acc-item ${a === me ? "current" : ""}" data-name="${escapeHTML(a)}">
+        ${avatarHTML(a)}
+        <div style="flex:1"><b>@${escapeHTML(a)}</b>
+        <div style="font-size:12px;color:var(--muted)">${a === me ? "Current" : "Tap to switch"}</div></div>
+      </div>`).join("");
+    $("acc-list").querySelectorAll(".acc-item").forEach(el => {
+      el.onclick = () => switchAccount(el.dataset.name);
+    });
+  }
+  function switchAccount(name) {
+    me = name;
+    localStorage.setItem("chatly_account", me);
+    $("modal-accounts").classList.add("hidden");
+    enterApp();
+    toast("Switched to @" + name);
+  }
+  $("btn-accounts").onclick = async () => {
+    $("acc-error").textContent = ""; $("acc-new").value = "";
+    try { await refreshAccounts(); } catch (e) {}
+    renderAccounts();
+    $("modal-accounts").classList.remove("hidden");
+  };
+  $("acc-close").onclick = () => $("modal-accounts").classList.add("hidden");
+  $("acc-create").onclick = async () => {
+    const name = $("acc-new").value.trim();
+    const err = $("acc-error");
+    if (!USER_RE.test(name)) { err.textContent = "Username: 3–20 letters, numbers or underscore."; return; }
+    try {
+      await api("/api/accounts", { method: "POST", body: { username: name } });
+      await refreshAccounts();
+      $("acc-new").value = "";
+      renderAccounts();
+      toast("Account @" + name + " created");
+    } catch (e) { err.textContent = e.message; }
+  };
+
+  /* ---------- CALLS (WebRTC; server only relays signaling) ---------- */
+  const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+  let call = null;        // active call (either direction)
+  let incoming = null;    // { from, kind, sdp, ice[], timer }
+  let timerId = null, ringTimer = null;
+
+  async function getMedia(kind) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: true, video: kind === "video" });
+    } catch (e) {
+      if (kind === "video") {
+        try { return await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); } catch (e2) {}
+      }
+      return null;
+    }
+  }
+
+  function signal(to, data) {
+    api("/api/signal", { method: "POST", body: { to, data } }).catch(() => {});
+  }
+
+  function createPC(peer) {
+    const pc = new RTCPeerConnection(ICE);
+    pc.onicecandidate = (e) => { if (e.candidate) signal(peer, { type: "ice", candidate: e.candidate }); };
+    pc.ontrack = (e) => { $("remote-video").srcObject = e.streams[0]; };
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === "failed" && call && call.pc === pc) {
+        toast("Call connection failed");
+        finishCall(call.startAt ? "ok" : "missed", "end");
+      }
+    };
+    return pc;
+  }
+
+  function showCallUI(name, kind, status) {
+    $("call").classList.remove("hidden");
+    $("call").classList.toggle("video-on", kind === "video");
+    $("c-name").textContent = "@" + name;
+    $("c-avatar").innerHTML = avatarHTML(name);
+    $("c-status").textContent = status;
+    $("c-timer").textContent = "";
+    $("c-cam").style.display = kind === "video" ? "" : "none";
+    $("c-mute").classList.remove("on"); $("c-mute").textContent = "🎤";
+    $("c-cam").classList.remove("on"); $("c-cam").textContent = "📷";
+  }
+
+  function hideCallUI() {
+    $("call").classList.add("hidden");
+    $("call").classList.remove("video-on");
+    $("remote-video").srcObject = null;
+    $("self-video").srcObject = null;
+  }
+
+  function markActive() {
+    if (!call || call.startAt) return;
+    call.startAt = Date.now();
+    clearTimeout(ringTimer);
+    $("c-status").textContent = "";
+    clearInterval(timerId);
+    timerId = setInterval(() => {
+      if (call && call.startAt) $("c-timer").textContent = fmtDur((Date.now() - call.startAt) / 1000);
+    }, 500);
+  }
+
+  function cleanupCall() {
+    clearInterval(timerId); clearTimeout(ringTimer);
+    if (call) {
+      if (call.stream) call.stream.getTracks().forEach(t => t.stop());
+      if (call.pc) call.pc.close();
+    }
+    call = null;
+    hideCallUI();
+  }
+
+  // Ends the call. The caller (dir "out") logs it in the chat; the callee does not.
+  function finishCall(result, notify) {
+    const c = call;
+    if (!c) return;
+    if (notify) signal(c.peer, { type: notify });
+    const dur = c.startAt ? (Date.now() - c.startAt) / 1000 : 0;
+    cleanupCall();
+    if (c.dir === "out") {
+      api("/api/call-log", {
+        method: "POST",
+        body: { with: c.peer, kind: c.kind, result: c.startAt ? "ok" : result, duration: dur },
+      }).then(() => { if (active === c.peer) loadMessages(c.peer); else loadChats(); })
+        .catch(() => {});
+    }
+  }
+
+  async function startCall(kind) {
+    if (!active || call || incoming) return;
+    const stream = await getMedia(kind);
+    if (!stream) { toast("Microphone/camera permission is needed to call."); return; }
+    const peer = active;
+    call = { peer, kind, dir: "out", stream, pc: null, startAt: 0, pendingIce: [], remoteSet: false };
+    call.pc = createPC(peer);
+    stream.getTracks().forEach(t => call.pc.addTrack(t, stream));
+    if (kind === "video") $("self-video").srcObject = stream;
+    showCallUI(peer, kind, "Calling…");
+    try {
+      const offer = await call.pc.createOffer();
+      await call.pc.setLocalDescription(offer);
+      signal(peer, { type: "offer", kind, sdp: call.pc.localDescription });
+    } catch (e) {
+      toast("Could not start call."); cleanupCall(); return;
+    }
+    // Give up after 40 seconds
+    ringTimer = setTimeout(() => {
+      if (call && !call.startAt) finishCall("missed", "cancel");
+    }, 40000);
+  }
+
+  async function acceptIncoming() {
+    const o = incoming; if (!o) return;
+    clearTimeout(o.timer); hideIncoming();
+    const stream = await getMedia(o.kind);
+    if (!stream) { incoming = null; signal(o.from, { type: "reject" }); toast("Microphone/camera permission is needed."); return; }
+    call = { peer: o.from, kind: o.kind, dir: "in", stream, pc: null, startAt: 0, pendingIce: o.ice.slice(), remoteSet: false };
+    incoming = null;
+    call.pc = createPC(call.peer);
+    stream.getTracks().forEach(t => call.pc.addTrack(t, stream));
+    if (o.kind === "video") $("self-video").srcObject = stream;
+    showCallUI(call.peer, o.kind, "Connecting…");
+    try {
+      await call.pc.setRemoteDescription(o.sdp);
+      call.remoteSet = true;
+      await flushIce();
+      const answer = await call.pc.createAnswer();
+      await call.pc.setLocalDescription(answer);
+      signal(call.peer, { type: "answer", sdp: call.pc.localDescription });
+      markActive();
+    } catch (e) {
+      toast("Could not connect the call."); finishCall("missed", "end");
+    }
+  }
+
+  async function flushIce() {
+    if (!call || !call.pc) return;
+    for (const c of call.pendingIce) await call.pc.addIceCandidate(c).catch(() => {});
+    call.pendingIce = [];
+  }
+
+  function hideIncoming() { $("incoming").classList.add("hidden"); }
+  function declineIncoming(send) {
+    const o = incoming; if (!o) return;
+    clearTimeout(o.timer); incoming = null; hideIncoming();
+    if (send) signal(o.from, { type: "reject" });
+  }
+
+  function onSignal(d) {
+    const from = d.from, data = d.data || {};
+
+    if (data.type === "offer") {
+      if (call || incoming) { signal(from, { type: "reject" }); return; }
+      incoming = { from, kind: data.kind, sdp: data.sdp, ice: [], timer: null };
+      $("in-avatar").innerHTML = avatarHTML(from);
+      $("in-name").textContent = "@" + from;
+      $("in-type").textContent = (data.kind === "video" ? "Incoming video call" : "Incoming audio call");
+      $("incoming").classList.remove("hidden");
+      incoming.timer = setTimeout(() => declineIncoming(false), 40000);
+      return;
+    }
+
+    if (data.type === "ice") {
+      if (incoming && incoming.from === from) incoming.ice.push(data.candidate);
+      else if (call && call.peer === from) {
+        if (call.remoteSet && call.pc) call.pc.addIceCandidate(data.candidate).catch(() => {});
+        else call.pendingIce.push(data.candidate);
+      }
+      return;
+    }
+
+    if (data.type === "answer") {
+      if (call && call.dir === "out" && call.peer === from && call.pc) {
+        call.pc.setRemoteDescription(data.sdp).then(async () => {
+          call.remoteSet = true;
+          await flushIce();
+          markActive();
+        }).catch(() => finishCall("missed", "end"));
+      }
+      return;
+    }
+
+    if (data.type === "reject") {
+      if (call && call.dir === "out" && call.peer === from) finishCall("declined", null);
+      return;
+    }
+
+    if (data.type === "cancel") {
+      if (incoming && incoming.from === from) declineIncoming(false);
+      return;
+    }
+
+    if (data.type === "end") {
+      if (call && call.peer === from) {
+        if (call.dir === "out") finishCall(call.startAt ? "ok" : "missed", null);
+        else cleanupCall();
+      }
+      return;
+    }
+  }
+
+  $("in-accept").onclick = acceptIncoming;
+  $("in-decline").onclick = () => declineIncoming(true);
+
+  $("btn-audio").onclick = () => startCall("audio");
+  $("btn-video").onclick = () => startCall("video");
+
+  $("c-end").onclick = () => {
+    if (!call) return;
+    if (call.dir === "out" && !call.startAt) finishCall("missed", "cancel");
+    else finishCall(call.startAt ? "ok" : "missed", "end");
+  };
+  $("c-mute").onclick = () => {
+    if (!call || !call.stream) return;
+    const on = !$("c-mute").classList.contains("on");
+    call.stream.getAudioTracks().forEach(t => t.enabled = !on);
+    $("c-mute").classList.toggle("on", on);
+    $("c-mute").textContent = on ? "🔇" : "🎤";
+  };
+  $("c-cam").onclick = () => {
+    if (!call || !call.stream) return;
+    const off = !$("c-cam").classList.contains("on");
+    call.stream.getVideoTracks().forEach(t => t.enabled = !off);
+    $("c-cam").classList.toggle("on", off);
+    $("c-cam").textContent = off ? "🚫" : "📷";
+  };
+
+  /* ---------- BOOT ---------- */
+  (async function boot() {
+    if (!token) return;
+    try {
+      const data = await api("/api/me");
+      login = data.login;
+      accounts = data.accounts;
+      if (!me || !accounts.includes(me)) me = accounts[0];
+      localStorage.setItem("chatly_account", me);
+      enterApp();
+    } catch (e) {
+      localStorage.removeItem("chatly_token");
+      token = null;
+    }
+  })();
+})();
+</script>
+</body>
+</html>
