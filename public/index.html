@@ -128,6 +128,27 @@
   #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 100; max-width: 90vw; text-align: center; }
   #toast.show { opacity: 1; }
 
+  /* WALLPAPER & DARK THEME */
+  .wall-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .wall-sw { position: relative; height: 72px; border: 2px solid transparent; border-radius: 10px; overflow: hidden; padding: 0; cursor: pointer; }
+  .wall-sw.current { border-color: var(--accent); }
+  .wall-sw span { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.45); color: #fff; font-size: 11px; padding: 3px 0; }
+  .theme-dark .chat-header { background: #17212b; border-color: #0b1218; }
+  .theme-dark .hname { color: #fff; }
+  .theme-dark .hstatus { color: #8fa3b5; }
+  .theme-dark .hstatus.typing { color: #6ab3f3; }
+  .theme-dark .call-btns button { background: #242f3d; color: #fff; }
+  .theme-dark .bubble { background: #182533; color: #f5f5f5; }
+  .theme-dark .msg-row.out .bubble { background: #2b5278; }
+  .theme-dark .bubble .meta { color: #8fa3b5; }
+  .theme-dark .bubble .meta .tick { color: #6ab3f3; }
+  .theme-dark .call-log .bad { color: #ff7b72; }
+  .theme-dark .typing-bubble { background: #182533; }
+  .theme-dark .typing-bubble span { background: #8fa3b5; }
+  .theme-dark .composer { background: #17212b; border-color: #0b1218; }
+  .theme-dark .composer textarea { background: #242f3d; border-color: #242f3d; color: #fff; }
+  .theme-dark .composer textarea:focus { background: #242f3d; }
+
   @media (max-width: 760px) {
     .sidebar { width: 100%; }
     .main { position: fixed; inset: 0; z-index: 20; }
@@ -184,6 +205,7 @@
           <div class="hstatus" id="h-status"></div>
         </div>
         <div class="call-btns">
+          <button id="btn-wall" title="Chat background">🎨</button>
           <button id="btn-audio" title="Audio call">📞</button>
           <button id="btn-video" title="Video call">🎥</button>
         </div>
@@ -250,6 +272,19 @@
   <div class="info"><b id="in-name"></b><br><small id="in-type"></small></div>
   <button class="no" id="in-decline" title="Decline">✖</button>
   <button class="yes" id="in-accept" title="Accept">✔</button>
+</div>
+
+<!-- WALLPAPER -->
+<div class="modal-bg hidden" id="modal-wall">
+  <div class="modal">
+    <h3>Chat background</h3>
+    <div class="wall-grid" id="wall-grid"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn-ghost" id="wall-close">Close</button>
+      <button class="btn-go" id="wall-upload">Upload image</button>
+    </div>
+    <input type="file" id="wall-file" accept="image/*" class="hidden">
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -875,6 +910,94 @@
     $("c-cam").classList.toggle("on", off);
     $("c-cam").textContent = off ? "🚫" : "📷";
   };
+
+  /* ---------- WALLPAPER ---------- */
+  // Doodle pattern (Telegram-style) as an SVG tile
+  function doodle(color, opacity) {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><g fill='none' stroke='${color}' stroke-opacity='${opacity}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='30' cy='34' r='9'/><path d='M120 18 l9 19 l21 2 l-16 14 l5 21 l-19 -11 l-19 11 l5 -21 l-16 -14 l21 -2 z'/><path d='M40 150 q10 -18 20 0 t20 0'/><rect x='158' y='128' width='24' height='24' rx='6'/><circle cx='190' cy='70' r='4'/><path d='M70 96 l14 14 m0 -14 l-14 14'/></g></svg>`;
+    return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+  }
+
+  const PRESETS = [
+    { id: "telegram", name: "Classic", css: doodle("#ffffff", 0.45) + ", linear-gradient(#c8e6f7, #9fd0ec)" },
+    { id: "sunset",   name: "Sunset",  css: "linear-gradient(160deg, #ffd6a5, #ffadad 55%, #c7b8ea)" },
+    { id: "mint",     name: "Mint",    css: "linear-gradient(160deg, #d4f1e8, #a8e6cf)" },
+    { id: "plain",    name: "Plain",   css: "#dfe6ec" },
+    { id: "night",    name: "Night",   dark: true, css: doodle("#ffffff", 0.07) + ", linear-gradient(#17212b, #0e1621)" },
+    { id: "ocean",    name: "Ocean",   dark: true, css: "linear-gradient(160deg, #1e3c72, #2a5298)" },
+  ];
+
+  function applyWall() {
+    const id = localStorage.getItem("chatly_wall") || "telegram";
+    const img = localStorage.getItem("chatly_wall_img");
+    let css, dark = false;
+    if (id === "custom" && img) {
+      css = `url("${img}") center / cover no-repeat`;
+    } else {
+      const p = PRESETS.find(x => x.id === id) || PRESETS[0];
+      css = p.css;
+      dark = !!p.dark;
+    }
+    $("messages").style.background = css;
+    $("chat-view").classList.toggle("theme-dark", dark);
+  }
+
+  function openWallModal() {
+    const current = localStorage.getItem("chatly_wall") || "telegram";
+    const grid = $("wall-grid");
+    grid.innerHTML = "";
+    const items = PRESETS.map(p => ({ id: p.id, name: p.name, css: p.css }));
+    const custom = localStorage.getItem("chatly_wall_img");
+    if (custom) items.push({ id: "custom", name: "Mine", css: `url("${custom}") center / cover no-repeat` });
+    for (const it of items) {
+      const b = document.createElement("button");
+      b.className = "wall-sw" + (it.id === current ? " current" : "");
+      b.style.background = it.css;
+      b.innerHTML = `<span>${it.name}</span>`;
+      b.onclick = () => {
+        localStorage.setItem("chatly_wall", it.id);
+        applyWall();
+        openWallModal();
+      };
+      grid.appendChild(b);
+    }
+    $("modal-wall").classList.remove("hidden");
+  }
+
+  $("btn-wall").onclick = openWallModal;
+  $("wall-close").onclick = () => $("modal-wall").classList.add("hidden");
+  $("wall-upload").onclick = () => $("wall-file").click();
+  $("wall-file").onchange = (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) { toast("Please choose an image file."); return; }
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = () => {
+      // Shrink large photos so they fit in browser storage
+      const max = 1280;
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * s);
+      c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      const data = c.toDataURL("image/jpeg", 0.82);
+      URL.revokeObjectURL(url);
+      try {
+        localStorage.setItem("chatly_wall_img", data);
+        localStorage.setItem("chatly_wall", "custom");
+        applyWall();
+        openWallModal();
+        toast("Background updated");
+      } catch (err) {
+        toast("Image is too large. Choose a smaller one.");
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); toast("Could not read this image."); };
+    img.src = url;
+  };
+  applyWall();
 
   /* ---------- BOOT ---------- */
   (async function boot() {
