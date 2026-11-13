@@ -1,277 +1,113 @@
-'use strict';
-/*
-  Chatly server — no external dependencies (Node.js 18+).
-  Run:  node server.js        then open http://localhost:3000
-  Realtime: Server-Sent Events (SSE). Actions: plain HTTP POST.
-  Data is stored in data.json next to this file.
-*/
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+const http=require('http'),fs=require('fs'),path=require('path'),cr=require('crypto');
+const FILE=path.join(__dirname,'data2.json');
+let D={logins:{},profiles:{},tokens:{},friends:{},groups:{},msgs:[],n:1};
+try{D=Object.assign(D,JSON.parse(fs.readFileSync(FILE,'utf8')))}catch{}
+let dirty=false;const save=()=>{dirty=true};
+setInterval(()=>{if(dirty){dirty=false;fs.writeFile(FILE,JSON.stringify(D),()=>{})}},1000);
+const streams={};
+const push=(ps,ev)=>{ps=[...new Set(ps)];ev.for=ps;const s='data: '+JSON.stringify(ev)+'\n\n';
+  for(const o of new Set(ps.map(p=>D.profiles[p])))for(const r of streams[o]||[])r.write(s)};
+const fr=p=>D.friends[p]||(D.friends[p]={f:[],i:[],o:[]});
+const dmid=(a,b)=>'d:'+[a,b].sort().join('|');
+const mem=c=>c[0]=='d'?c.slice(2).split('|'):(D.groups[c.slice(2)]||{members:[]}).members;
+const sys=(c,t)=>{D.msgs.push({id:D.n++,c,f:'',t,ts:Date.now(),s:1})};
+const role=(g,p)=>g.owner==p?'owner':g.admins.includes(p)?'admin':'member';
+const hash=(pw,salt)=>cr.scryptSync(pw,salt,32).toString('hex');
+const nm=s=>String(s||'').trim().toLowerCase();
+const okName=s=>/^[a-z0-9_]{3,20}$/.test(s);
+const mkTok=l=>{const t=cr.randomBytes(24).toString('hex');D.tokens[t]=l;save();return t};
+const rm=(g,all)=>{delete D.groups[g.id];D.msgs=D.msgs.filter(m=>m.c!='g:'+g.id);save();push(all,{e:'sync'});return{}};
 
-const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'data.json');
-const PUBLIC_FILE = path.join(__dirname, 'public', 'index.html');
-const USER_RE = /^[a-zA-Z0-9_]{3,20}$/;
+function reg(b){const u=nm(b.u),pw=String(b.pw||'');
+  if(!okName(u))throw'Username: 3-20 characters, a-z 0-9 _';
+  if(pw.length<4)throw'Password is too short (min 4)';
+  if(D.profiles[u])throw'Username is taken';
+  const salt=cr.randomBytes(16).toString('hex');
+  D.logins[u]={salt,hash:hash(pw,salt),profiles:[u]};D.profiles[u]=u;save();
+  return{token:mkTok(u),profiles:[u]}}
+function login(b){const u=nm(b.u),L=D.logins[u];
+  if(!L||hash(String(b.pw||''),L.salt)!==L.hash)throw'Wrong username or password';
+  return{token:mkTok(u),profiles:L.profiles}}
+function sync(p,L){const f=fr(p);
+  const gs=Object.values(D.groups).filter(g=>g.members.includes(p));
+  const ids=new Set([...f.f.map(x=>dmid(p,x)),...gs.map(g=>'g:'+g.id)]);
+  const msgs={};for(const id of ids)msgs[id]=[];
+  for(const m of D.msgs)if(ids.has(m.c))msgs[m.c].push(m);
+  for(const k in msgs)msgs[k]=msgs[k].slice(-200);
+  return{me:p,profiles:D.logins[L].profiles,friends:f,groups:gs,msgs,
+    pub:Object.values(D.groups).filter(g=>g.pub&&!g.members.includes(p)).slice(0,50).map(g=>({id:g.id,name:g.name,n:g.members.length}))}}
 
-/* ---------- storage ---------- */
-function load() {
-  try {
-    const d = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    d.logins = d.logins || {}; d.accounts = d.accounts || {};
-    d.messages = d.messages || []; d.tokens = d.tokens || {};
-    return d;
-  } catch (e) {
-    return { logins: {}, accounts: {}, messages: [], tokens: {} };
+function act(L,p,b){
+  const g=D.groups[b.id];
+  const adm=()=>{if(!g||!g.members.includes(p)||role(g,p)=='member')throw'Admins only'};
+  switch(b.a){
+  case'addp':{const u=nm(b.u);if(!okName(u))throw'Username: 3-20 characters, a-z 0-9 _';if(D.profiles[u])throw'Username is taken';
+    D.logins[L].profiles.push(u);D.profiles[u]=L;save();return{profiles:D.logins[L].profiles}}
+  case'sync':return sync(p,L);
+  case'msg':{const t=String(b.t||'').trim().slice(0,2000),m=mem(String(b.c));
+    if(!t||!m.includes(p))throw'Cannot send';
+    if(b.c[0]=='d'&&!fr(p).f.includes(m.find(x=>x!=p)))throw'You are not friends';
+    D.msgs.push({id:D.n++,c:b.c,f:p,t,ts:Date.now()});if(D.msgs.length>30000)D.msgs.splice(0,5000);
+    save();push(m,{e:'sync'});return{}}
+  case'del':{const i=D.msgs.findIndex(x=>x.id==b.id),m=D.msgs[i];if(!m)return{};
+    const ok=m.f==p||(m.c[0]=='g'&&D.groups[m.c.slice(2)]&&role(D.groups[m.c.slice(2)],p)!='member');
+    if(!ok)throw'Not allowed';D.msgs.splice(i,1);save();push(mem(m.c),{e:'sync'});return{}}
+  case'typing':{const m=mem(String(b.c));if(m.includes(p))push(m.filter(x=>x!=p),{e:'typing',c:b.c,f:p});return{}}
+  case'sig':case'actv':{if(!fr(p).f.includes(b.to))throw'You are not friends';push([b.to],{e:b.a,f:p,d:b.d});return{}}
+  case'fadd':{const t=nm(b.to);if(!D.profiles[t]||t==p)throw'User not found';
+    const a=fr(p),o=fr(t);if(a.f.includes(t))throw'Already friends';
+    if(a.i.includes(t)){a.i=a.i.filter(x=>x!=t);o.o=o.o.filter(x=>x!=p);a.f.push(t);o.f.push(p)}
+    else if(!a.o.includes(t)){a.o.push(t);o.i.push(p)}
+    save();push([p,t],{e:'sync'});return{}}
+  case'facc':{const t=b.to,a=fr(p),o=fr(t);if(!a.i.includes(t))throw'No such request';
+    a.i=a.i.filter(x=>x!=t);o.o=o.o.filter(x=>x!=p);a.f.push(t);o.f.push(p);save();push([p,t],{e:'sync'});return{}}
+  case'fdec':case'frem':{const t=b.to,a=fr(p),o=fr(t);
+    for(const k of['f','i','o']){a[k]=a[k].filter(x=>x!=t);o[k]=o[k].filter(x=>x!=p)}
+    save();push([p,t],{e:'sync'});return{}}
+  case'gnew':{const n=String(b.name||'').trim().slice(0,40);if(!n)throw'Group name is required';
+    const id=String(D.n++);
+    D.groups[id]={id,name:n,owner:p,admins:[],members:[p],pub:!!b.pub,code:cr.randomBytes(4).toString('hex')};
+    sys('g:'+id,p+' created the group');save();push([p],{e:'sync'});return{id:'g:'+id}}
+  case'gjoin':{const h=b.id?D.groups[b.id]:Object.values(D.groups).find(x=>x.code==String(b.code||'').trim());
+    if(!h||(b.id&&!h.pub))throw'Group not found';if(h.members.includes(p))throw'Already a member';
+    h.members.push(p);sys('g:'+h.id,p+' joined');save();push(h.members,{e:'sync'});return{id:'g:'+h.id}}
+  case'gadd':{adm();const u=nm(b.u);if(!D.profiles[u])throw'User not found';if(g.members.includes(u))throw'Already a member';
+    g.members.push(u);sys('g:'+g.id,p+' added '+u);save();push(g.members,{e:'sync'});return{}}
+  case'gkick':{adm();const u=b.u;if(!g.members.includes(u)||u==g.owner||(g.admins.includes(u)&&p!=g.owner))throw'Not allowed';
+    g.members=g.members.filter(x=>x!=u);g.admins=g.admins.filter(x=>x!=u);sys('g:'+g.id,p+' removed '+u);
+    save();push([...g.members,u],{e:'sync'});return{}}
+  case'gadm':{if(!g||g.owner!=p)throw'Owner only';if(!g.members.includes(b.u)||b.u==p)throw'Bad user';
+    g.admins=g.admins.filter(x=>x!=b.u);if(b.on)g.admins.push(b.u);
+    sys('g:'+g.id,b.u+(b.on?' is now an admin':' is no longer an admin'));save();push(g.members,{e:'sync'});return{}}
+  case'gpub':{if(!g||g.owner!=p)throw'Owner only';g.pub=!!b.on;save();push(g.members,{e:'sync'});return{}}
+  case'gleave':{if(!g||!g.members.includes(p))throw'Not a member';const all=[...g.members];
+    g.members=g.members.filter(x=>x!=p);g.admins=g.admins.filter(x=>x!=p);
+    if(!g.members.length)return rm(g,all);
+    if(g.owner==p){g.owner=g.admins[0]||g.members[0];g.admins=g.admins.filter(x=>x!=g.owner)}
+    sys('g:'+g.id,p+' left');save();push(all,{e:'sync'});return{}}
+  case'gdel':{if(!g||g.owner!=p)throw'Owner only';return rm(g,g.members)}
   }
-}
-let db = load();
-function save() {
-  const tmp = DATA_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(db));
-  fs.renameSync(tmp, DATA_FILE);
-}
+  throw'Unknown action'}
 
-/* ---------- helpers ---------- */
-const subs = new Map(); // account -> Set<res>
-function subscribe(account, res) {
-  if (!subs.has(account)) subs.set(account, new Set());
-  subs.get(account).add(res);
-}
-function emit(account, event, data) {
-  const set = subs.get(account);
-  if (!set) return;
-  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-  for (const r of set) r.write(payload);
-}
-function sendJSON(res, status, obj) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-  res.end(JSON.stringify(obj));
-}
-function readBody(req) {
-  return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (c) => {
-      data += c;
-      if (data.length > 2e6) { reject(new Error('Body too large')); req.destroy(); }
-    });
-    req.on('end', () => {
-      try { resolve(data ? JSON.parse(data) : {}); }
-      catch (e) { reject(new Error('Invalid JSON')); }
-    });
-    req.on('error', reject);
-  });
-}
-function loginFor(req, urlToken) {
-  const h = req.headers.authorization || '';
-  const token = h.startsWith('Bearer ') ? h.slice(7) : urlToken;
-  if (!token || !db.tokens[token]) return null;
-  return db.tokens[token].login;
-}
-function accountFor(login, name) {
-  if (!name || !db.accounts[name] || db.accounts[name].login !== login) return null;
-  return name;
-}
-function newToken(login) {
-  const t = crypto.randomBytes(32).toString('hex');
-  db.tokens[t] = { login, ts: Date.now() };
-  return t;
-}
-function hashPassword(pw, salt) {
-  return crypto.scryptSync(pw, salt, 64).toString('hex');
-}
-function conversation(a, b) {
-  return db.messages.filter(m => (m.from === a && m.to === b) || (m.from === b && m.to === a));
-}
-function makeMessage(fields) {
-  const msg = Object.assign({ id: crypto.randomUUID(), ts: Date.now(), read: false }, fields);
-  db.messages.push(msg);
-  save();
-  return msg;
-}
-
-/* ---------- API ---------- */
-async function handleApi(req, res, url) {
-  const method = req.method;
-  const p = url.pathname;
-
-  // --- public routes ---
-  if (method === 'POST' && p === '/api/register') {
-    const body = await readBody(req);
-    const login = String(body.login || '').trim();
-    const password = String(body.password || '');
-    if (!USER_RE.test(login)) return sendJSON(res, 400, { error: 'Login: 3–20 letters, numbers or underscore.' });
-    if (password.length < 4) return sendJSON(res, 400, { error: 'Password must be at least 4 characters.' });
-    if (db.logins[login] || db.accounts[login]) return sendJSON(res, 409, { error: 'This login is already taken.' });
-    const salt = crypto.randomBytes(16).toString('hex');
-    db.logins[login] = { salt, hash: hashPassword(password, salt), accounts: [login] };
-    db.accounts[login] = { login, createdAt: Date.now() };
-    const token = newToken(login);
-    save();
-    return sendJSON(res, 200, { token, login, accounts: [login] });
-  }
-
-  if (method === 'POST' && p === '/api/login') {
-    const body = await readBody(req);
-    const login = String(body.login || '').trim();
-    const rec = db.logins[login];
-    if (!rec) return sendJSON(res, 401, { error: 'No such login. Register first.' });
-    const h = hashPassword(String(body.password || ''), rec.salt);
-    if (!crypto.timingSafeEqual(Buffer.from(h, 'hex'), Buffer.from(rec.hash, 'hex')))
-      return sendJSON(res, 401, { error: 'Wrong password.' });
-    const token = newToken(login);
-    save();
-    return sendJSON(res, 200, { token, login, accounts: rec.accounts });
-  }
-
-  if (method === 'GET' && p === '/api/events') {
-    // Server-Sent Events stream. Browsers can't set headers on EventSource, so the token is in the query.
-    const login = loginFor(req, url.searchParams.get('token'));
-    const account = login && accountFor(login, url.searchParams.get('account'));
-    if (!account) return sendJSON(res, 401, { error: 'Not allowed' });
-    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
-    res.write(': connected\n\n');
-    subscribe(account, res);
-    const ping = setInterval(() => res.write(': ping\n\n'), 25000);
-    req.on('close', () => {
-      clearInterval(ping);
-      const set = subs.get(account);
-      if (set) set.delete(res);
-    });
-    return;
-  }
-
-  // --- authenticated routes ---
-  const login = loginFor(req, null);
-  if (!login) return sendJSON(res, 401, { error: 'Please log in.' });
-
-  if (method === 'POST' && p === '/api/logout') {
-    const h = req.headers.authorization || '';
-    if (h.startsWith('Bearer ')) delete db.tokens[h.slice(7)];
-    save();
-    return sendJSON(res, 200, { ok: true });
-  }
-
-  if (method === 'GET' && p === '/api/me') {
-    return sendJSON(res, 200, { login, accounts: db.logins[login].accounts });
-  }
-
-  if (method === 'POST' && p === '/api/accounts') {
-    const body = await readBody(req);
-    const name = String(body.username || '').trim();
-    if (!USER_RE.test(name)) return sendJSON(res, 400, { error: 'Username: 3–20 letters, numbers or underscore.' });
-    if (db.accounts[name] || db.logins[name]) return sendJSON(res, 409, { error: 'That username is taken.' });
-    db.accounts[name] = { login, createdAt: Date.now() };
-    db.logins[login].accounts.push(name);
-    save();
-    return sendJSON(res, 200, { username: name });
-  }
-
-  // Everything below acts as one of this login's accounts (sent in X-Account).
-  const me = accountFor(login, req.headers['x-account']);
-  if (!me) return sendJSON(res, 400, { error: 'Select an account first.' });
-
-  if (method === 'GET' && p === '/api/users/check') {
-    const name = url.searchParams.get('name') || '';
-    return sendJSON(res, 200, { exists: !!db.accounts[name], self: name === me });
-  }
-
-  if (method === 'GET' && p === '/api/chats') {
-    const partners = new Map();
-    for (const m of db.messages) {
-      if (m.from !== me && m.to !== me) continue;
-      const other = m.from === me ? m.to : m.from;
-      const cur = partners.get(other) || { name: other, last: null, unread: 0 };
-      cur.last = m; // messages are stored in time order
-      if (m.to === me && !m.read) cur.unread++;
-      partners.set(other, cur);
-    }
-    const list = [...partners.values()].sort((a, b) => b.last.ts - a.last.ts);
-    return sendJSON(res, 200, list);
-  }
-
-  if (method === 'GET' && p === '/api/messages') {
-    const withName = url.searchParams.get('with') || '';
-    if (!db.accounts[withName]) return sendJSON(res, 404, { error: 'No such user.' });
-    const msgs = conversation(me, withName);
-    let changed = false;
-    for (const m of msgs) if (m.to === me && !m.read) { m.read = true; changed = true; }
-    if (changed) {
-      save();
-      emit(withName, 'read', { by: me });
-    }
-    return sendJSON(res, 200, msgs);
-  }
-
-  if (method === 'POST' && p === '/api/messages') {
-    const body = await readBody(req);
-    const to = String(body.to || '');
-    const text = String(body.text || '').trim();
-    if (!db.accounts[to] || to === me) return sendJSON(res, 400, { error: 'Invalid recipient.' });
-    if (!text || text.length > 4000) return sendJSON(res, 400, { error: 'Message is empty or too long.' });
-    const msg = makeMessage({ from: me, to, type: 'text', text });
-    emit(to, 'chat', msg);
-    emit(me, 'chat', msg); // other devices of the same account
-    return sendJSON(res, 200, msg);
-  }
-
-  if (method === 'POST' && p === '/api/typing') {
-    const body = await readBody(req);
-    const to = String(body.to || '');
-    if (!db.accounts[to] || to === me) return sendJSON(res, 400, { error: 'Invalid recipient.' });
-    emit(to, 'typing', { from: me, on: !!body.on });
-    return sendJSON(res, 200, { ok: true });
-  }
-
-  if (method === 'POST' && p === '/api/signal') {
-    // WebRTC call signaling (offer / answer / ice / reject / end / cancel). Relayed only, not stored.
-    const body = await readBody(req);
-    const to = String(body.to || '');
-    if (!db.accounts[to] || to === me) return sendJSON(res, 400, { error: 'Invalid recipient.' });
-    emit(to, 'signal', { from: me, data: body.data });
-    return sendJSON(res, 200, { ok: true });
-  }
-
-  if (method === 'POST' && p === '/api/call-log') {
-    const body = await readBody(req);
-    const withName = String(body.with || '');
-    const kind = body.kind === 'video' ? 'video' : 'audio';
-    const result = ['ok', 'missed', 'declined'].includes(body.result) ? body.result : 'missed';
-    if (!db.accounts[withName] || withName === me) return sendJSON(res, 400, { error: 'Invalid recipient.' });
-    const msg = makeMessage({
-      from: me, to: withName, type: 'call', callKind: kind,
-      callResult: result, callDur: Math.max(0, Number(body.duration) || 0),
-    });
-    emit(withName, 'chat', msg);
-    emit(me, 'chat', msg);
-    return sendJSON(res, 200, msg);
-  }
-
-  return sendJSON(res, 404, { error: 'Not found' });
-}
-
-/* ---------- HTTP server ---------- */
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://localhost');
-  try {
-    if (url.pathname.startsWith('/api/')) {
-      await handleApi(req, res, url);
-      return;
-    }
-    if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(fs.readFileSync(PUBLIC_FILE));
-      return;
-    }
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not found');
-  } catch (e) {
-    if (!res.headersSent) sendJSON(res, 400, { error: e.message || 'Bad request' });
-    else res.end();
-  }
-});
-
-server.listen(PORT, () => {
-  console.log(`Chatly running at http://localhost:${PORT}`);
-});
+http.createServer((q,s)=>{
+  const u=new URL(q.url,'http://x');
+  if(u.pathname=='/events'){const L=D.tokens[u.searchParams.get('token')];
+    if(!L){s.writeHead(401);return s.end()}
+    s.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-cache',Connection:'keep-alive','X-Accel-Buffering':'no'});
+    s.write(': ok\n\n');(streams[L]=streams[L]||new Set()).add(s);
+    const k=setInterval(()=>s.write(': ping\n\n'),20000);
+    q.on('close',()=>{clearInterval(k);streams[L].delete(s)});return}
+  if(q.method=='POST'&&u.pathname=='/api'){let d='';
+    q.on('data',c=>{d+=c;if(d.length>2e5)q.destroy()});
+    q.on('end',()=>{let r;
+      try{const b=JSON.parse(d);
+        if(b.a=='reg')r=reg(b);else if(b.a=='login')r=login(b);
+        else{const L=D.tokens[b.token];if(!L)throw'AUTH';
+          if(b.a!='addp'&&!D.logins[L].profiles.includes(b.as))throw'Bad profile';
+          r=act(L,b.as,b)}}
+      catch(e){if(typeof e=='string')r={err:e};else{console.error(e);r={err:'Server error'}}}
+      s.writeHead(200,{'Content-Type':'application/json'});s.end(JSON.stringify(r))});return}
+  fs.readFile(path.join(__dirname,'public','index.html'),(e,h)=>{
+    if(e){s.writeHead(404);return s.end('public/index.html not found')}
+    s.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});s.end(h)})
+}).listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Chatly running at http://localhost:'+(process.env.PORT||3000)));
