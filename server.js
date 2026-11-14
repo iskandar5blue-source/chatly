@@ -87,7 +87,7 @@ function act(L,p,b){
     save();push(m,{e:'sync'});return{}}
   case'fwd':{const src=D.msgs.find(x=>x.id==b.id);if(!src||src.s||!mem(src.c).includes(p))throw'Not allowed';
     if(src.poll)throw'Polls cannot be forwarded';const c=String(b.c),m=mem(c);if(!m.includes(p))throw'Cannot send';dmOk(c,p);
-    addM({c,f:p,t:src.t,fw:src.fw||src.f,...xp(c)});save();push(m,{e:'sync'});return{}}
+    addM({c,f:p,t:src.t,...(b.hide?{}:{fw:src.fw||src.f}),...xp(c)});save();push(m,{e:'sync'});return{}}
   case'poll':{const c=String(b.c),m=mem(c);if(!m.includes(p))throw'Cannot send';dmOk(c,p);
     const q=String(b.q||'').trim().slice(0,200),o=(Array.isArray(b.o)?b.o:[]).map(x=>String(x||'').trim().slice(0,80)).filter(Boolean).slice(0,8);
     if(!q||o.length<2)throw'A poll needs a question and at least 2 options';
