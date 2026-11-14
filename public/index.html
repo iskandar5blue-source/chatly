@@ -55,6 +55,15 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 .bd{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.bd button{height:80px;font-size:34px}
 .sw{width:60px;height:40px;border-radius:8px;cursor:pointer;display:inline-block;margin:3px}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000c;padding:9px 16px;border-radius:20px;z-index:99}
+.rt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}.tm{font-size:11px;color:var(--m)}
+.bdg{background:var(--ac);color:#fff;border-radius:10px;min-width:20px;height:20px;padding:0 6px;display:inline-grid;place-items:center;font-size:12px;font-weight:600}.bdg.mu{background:#4a5a6a}
+.onl{color:#4cd964!important;font-style:normal}
+.ma{display:none;position:absolute;top:-16px;right:8px;background:var(--p);border-radius:10px;padding:2px 4px;gap:2px;z-index:2;box-shadow:0 2px 8px #0008}.m:hover .ma,.m.sel .ma{display:flex}.ma span{cursor:pointer;padding:1px 4px}
+.rx{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}.rx b{background:#0004;border-radius:10px;padding:1px 7px;cursor:pointer;font-weight:400;font-size:12px}.rx b.me{outline:1px solid var(--ac)}
+.rq{border-left:3px solid var(--ac);padding:1px 8px;margin-bottom:4px;font-size:12px;color:#b8c7d6;background:#0003;border-radius:4px}.m a{color:#8ec9ff}.tk{margin-left:4px;font-size:11px}
+#rb{padding:6px 12px;background:var(--p2);font-size:13px;display:flex;justify-content:space-between;color:#b8c7d6}
+#ep{display:flex;flex-wrap:wrap;gap:2px;padding:6px;background:var(--p)}#ep button{background:none;font-size:20px;padding:2px 5px}
+#nb{padding:8px 12px;background:#1e3a52;display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:8px}
 .bk{display:none}
 @media(max-width:700px){#app{grid-template-columns:1fr}#main{display:none}body.co #side{display:none}body.co #main{display:block}.bk{display:inline-block}}
 </style></head><body>
@@ -64,10 +73,12 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 <div id="app" hidden>
  <aside id="side"><div id="me" data-do="profile"></div>
   <div id="tabs"><button data-t="chats">Chats</button><button data-t="friends">Friends</button><button data-t="groups">Groups</button></div>
+  <div id="nb" hidden>🔔 Get notifications for new messages <button data-do="nreq">Enable</button></div>
+  <input id="sq" placeholder="Search chats…" style="margin:6px 8px;flex:none">
   <div id="list"></div></aside>
  <main id="main"><div id="empty">Select a chat to start messaging</div>
-  <div id="chat" hidden><div id="hd"></div><div id="msgs"></div>
-   <form id="f"><input id="in" placeholder="Write a message…" autocomplete="off"><button>➤</button></form></div></main>
+  <div id="chat" hidden><div id="hd"></div><div id="msgs"></div><div id="rb" hidden></div><div id="ep" hidden></div>
+   <form id="f"><button type="button" data-do="ept">😊</button><input id="in" placeholder="Write a message…" autocomplete="off"><button>➤</button></form></div></main>
 </div>
 <div id="modal" hidden><div id="box"></div></div>
 <div id="call" hidden><video id="rv" autoplay playsinline></video><audio id="ra" autoplay></audio><video id="lv" autoplay playsinline muted></video>
@@ -77,7 +88,7 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const APP_NAME='Chatly';document.title=APP_NAME;$('#an').textContent=APP_NAME;
 let es,C=null,A=null,Q=Promise.resolve(),lastT=0;
-const S={tab:'chats',cur:null,typing:{},d:null,token:localStorage.tok||'',me:localStorage.me||'',modal:null,ring:null};
+const S={tab:'chats',cur:null,typing:{},d:null,token:localStorage.tok||'',me:localStorage.me||'',modal:null,ring:null,rep:0,edit:0,lastId:0,q:''};
 function toast(t){const x=$('#toast');x.textContent=t;x.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>x.hidden=true,3200)}
 async function api(a,b={}){try{const r=await fetch('/api',{method:'POST',body:JSON.stringify({a,token:S.token,as:S.me,...b})});const j=await r.json();
   if(j.err==='AUTH'){localStorage.removeItem('tok');location.reload();return{err:1}}
@@ -98,25 +109,51 @@ function start(){$('#auth').hidden=true;$('#app').hidden=false;localStorage.me=S
 function connect(){es&&es.close();es=new EventSource('/events?token='+S.token);
   es.onmessage=m=>{const v=JSON.parse(m.data);if(!v.for.includes(S.me))return;
     if(v.e=='sync')refresh();else if(v.e=='typing'){S.typing[v.c+'|'+v.f]=Date.now();drawChat();if(S.tab=='chats'&&!focusIn($('#list')))drawList()}
-    else if(v.e=='sig')Q=Q.then(()=>onSig(v)).catch(console.error);else if(v.e=='actv')onAct(v)}}
-async function refresh(){const r=await api('sync');if(r.err||!r.me)return;S.d=r;draw()}
+    else if(v.e=='rd'){if(S.d){S.d.pr[v.c]=Math.max(S.d.pr[v.c]||0,v.id);drawChat()}}else if(v.e=='sig')Q=Q.then(()=>onSig(v)).catch(console.error);else if(v.e=='actv')onAct(v)}}
+async function refresh(){const r=await api('sync');if(r.err||!r.me)return;const first=!S.d;S.d=r;
+  let mx=0;const fresh=[];for(const c in r.msgs)for(const m of r.msgs[c]){if(m.id>mx)mx=m.id;if(!first&&m.id>S.lastId&&!m.s&&m.f!=S.me)fresh.push({c,m})}
+  S.lastId=first?mx:Math.max(S.lastId,mx);fresh.forEach(notify);draw()}
 setInterval(()=>{for(const k in S.typing)if(Date.now()-S.typing[k]>4000){delete S.typing[k];if(S.d){drawChat();if(S.tab=='chats'&&!focusIn($('#list')))drawList()}}},1000);
+
+// ---------- unread / notifications / message helpers ----------
+const unread=c=>{const rd=S.d.rd[c]||0;return(S.d.msgs[c]||[]).filter(m=>!m.s&&m.f!=S.me&&m.id>rd).length};
+const muted=()=>{try{return JSON.parse(localStorage['mu:'+S.me]||'[]')}catch{return[]}},isMuted=c=>muted().includes(c);
+const hm=ts=>new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const linkify=t=>t.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target=_blank rel=noopener>$1</a>');
+function mh(m,c,g,mod){if(m.s)return`<div class=sys>${esc(m.t)}</div>`;const me=m.f==S.me,q=m.r?(S.d.msgs[c]||[]).find(x=>x.id==m.r):null,pr=S.d.pr[c]||0;
+  return`<div class="m ${me?'me':''}"><div class=ma>${['👍','❤️','😂','🔥'].map(e=>`<span data-do=rx data-v="${m.id}|${e}">${e}</span>`).join('')}<span data-do=rep data-v=${m.id}>↩</span>${me?`<span data-do=edt data-v=${m.id}>✏️</span>`:''}${me||mod?`<span data-do=del data-v=${m.id}>🗑</span>`:''}</div>`
+   +(g&&!me?`<b class=who>${esc(m.f)}</b>`:'')+(m.r?`<div class=rq>${q?`<b>${esc(q.f)}</b> ${esc(q.t.slice(0,60))}`:'Deleted message'}</div>`:'')
+   +linkify(esc(m.t))+`<time>${m.e?'edited · ':''}${hm(m.ts)}</time>`+(me&&c[0]=='d'?`<span class=tk style="color:${m.id<=pr?'#6ab3f3':'#9fb1c3'}">${m.id<=pr?'✓✓':'✓'}</span>`:'')
+   +(m.rx?`<div class=rx>${Object.entries(m.rx).map(([e,u])=>`<b class="${u.includes(S.me)?'me':''}" data-do=rx data-v="${m.id}|${e}">${e} ${u.length}</b>`).join('')}</div>`:'')+`</div>`}
+function markRead(){if(!S.cur||document.hidden||!S.d)return;const m=S.d.msgs[S.cur]||[],last=m.length?m[m.length-1].id:0;
+  if(last>(S.d.rd[S.cur]||0)){S.d.rd[S.cur]=last;api('read',{c:S.cur,id:last})}}
+function updTitle(){const n=Object.keys(S.d.msgs).reduce((a,c)=>a+(isMuted(c)?0:unread(c)),0);document.title=(n?'('+n+') ':'')+APP_NAME}
+let AC;const beep=()=>{try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;g.gain.value=.06;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.12)}catch{}};
+function notify({c,m}){if(isMuted(c)||(S.cur==c&&!document.hidden))return;beep();const t=c[0]=='g'?nameOf(c)+' · '+m.f:m.f;
+  if(document.hidden&&window.Notification&&Notification.permission=='granted'){try{const n=new Notification(t,{body:m.t.slice(0,120),tag:c});n.onclick=()=>{focus();DO.open(c);n.close()}}catch{}}
+  else toast('💬 '+t+': '+m.t.slice(0,60))}
+function rbar(){const r=$('#rb'),id=S.edit||S.rep,m=(S.d&&S.cur?S.d.msgs[S.cur]||[]:[]).find(x=>x.id==id);r.hidden=!id;if(!id)return;
+  r.innerHTML=`<span>${S.edit?'✏️ Editing message':'↩ Reply to '+esc(m?m.f:'')+': '+esc(m?m.t.slice(0,50):'')}</span><span data-do=rcl style="cursor:pointer">✕</span>`}
+$('#ep').innerHTML=['😀','😂','😍','🥰','😎','🤔','😢','😡','👍','👎','🙏','👏','🔥','❤️','💯','🎉','😴','🤝','😅','🙌','💪','👀','✅','❌'].map(e=>`<button type=button data-do=emo data-v=${e}>${e}</button>`).join('');
+$('#sq').addEventListener('input',e=>{S.q=e.target.value.toLowerCase();drawList()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.d)draw()});addEventListener('focus',()=>{if(S.d)draw()});
 
 // ---------- drawing ----------
 function draw(){if(!S.d)return;
   $('#me').innerHTML=`${av(S.me)}<b>${esc(S.me)}</b><span>⇄</span>`;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==S.tab));
-  if(!focusIn($('#list')))drawList();drawChat();
+  drawChat();markRead();if(!focusIn($('#list')))drawList();updTitle();
+  $('#nb').hidden=!(window.Notification&&Notification.permission=='default');$('#sq').hidden=S.tab!='chats';
   if(S.modal&&!$('#modal').hidden&&!focusIn($('#box')))S.modal()}
 function chats(){const d=S.d;return[...d.friends.f.map(f=>dmId(f)),...d.groups.map(g=>'g:'+g.id)]
-  .map(c=>{const m=d.msgs[c]||[];return{c,last:m[m.length-1]}}).sort((x,y)=>(y.last?.ts||0)-(x.last?.ts||0))}
+  .map(c=>{const m=d.msgs[c]||[];return{c,last:m[m.length-1]}}).sort((x,y)=>(y.last?.ts||0)-(x.last?.ts||0)).filter(({c})=>!S.q||nameOf(c).toLowerCase().includes(S.q))}
 function drawList(){const d=S.d,f=d.friends;let h='';
-  if(S.tab=='chats')h=chats().map(({c,last})=>{const ty=typers(c);
-    return`<div class="it ${c==S.cur?'on':''}" data-do=open data-v="${esc(c)}">${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b><span>${ty.length?'<i class=ty>typing…</i>':last?esc((last.s?'':last.f==S.me?'You: ':c[0]=='g'?last.f+': ':'')+last.t):'No messages yet'}</span></div></div>`}).join('')||'<p class=hint>No chats yet. Add friends or join a group.</p>';
+  if(S.tab=='chats')h=chats().map(({c,last})=>{const ty=typers(c),n=unread(c),mu=isMuted(c);
+    return`<div class="it ${c==S.cur?'on':''}" data-do=open data-v="${esc(c)}">${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b><span>${ty.length?'<i class=ty>typing…</i>':last?esc((last.s?'':last.f==S.me?'You: ':c[0]=='g'?last.f+': ':'')+last.t):'No messages yet'}</span></div><div class=rt><span class=tm>${last?hm(last.ts):''}</span><span>${mu?'🔕 ':''}${n?`<span class="bdg ${mu?'mu':''}">${n>9?'9+':n}</span>`:''}</span></div></div>`}).join('')||'<p class=hint>No chats yet. Add friends or join a group.</p>';
   else if(S.tab=='friends')h=`<form id=fa class=row><input id=fu placeholder="Add friend by username"><button>Add</button></form>`
     +(f.i.length?'<h4>Requests</h4>':'')+f.i.map(u=>`<div class=it>${av(u)}<div class=tx><b>${esc(u)}</b><span>wants to be friends</span></div><button class=ok data-do=facc data-v=${u}>✓</button><button data-do=fdec data-v=${u}>✕</button></div>`).join('')
     +(f.o.length?'<h4>Sent</h4>':'')+f.o.map(u=>`<div class=it>${av(u)}<div class=tx><b>${esc(u)}</b><span>pending</span></div><button data-do=fdec data-v=${u}>Cancel</button></div>`).join('')
-    +'<h4>Friends</h4>'+(f.f.map(u=>`<div class=it data-do=open data-v="${dmId(u)}">${av(u)}<div class=tx><b>${esc(u)}</b></div><button data-do=frem data-v=${u}>✕</button></div>`).join('')||'<p class=hint>No friends yet.</p>');
+    +'<h4>Friends</h4>'+(f.f.map(u=>`<div class=it data-do=open data-v="${dmId(u)}">${av(u)}<div class=tx><b>${esc(u)}</b><span>${S.d.on.includes(u)?'<i class=onl>online</i>':''}</span></div><button data-do=frem data-v=${u}>✕</button></div>`).join('')||'<p class=hint>No friends yet.</p>');
   else h=`<div class=row><button class=wide data-do=gnew>＋ New group</button></div><form id=jc class=row><input id=jcode placeholder="Invite code"><button>Join</button></form><h4>My groups</h4>`
     +(d.groups.map(g=>`<div class=it data-do=open data-v="g:${g.id}">${av(g.name)}<div class=tx><b>${esc(g.name)}</b><span>${g.members.length} members · ${roleOf(g,S.me)}</span></div></div>`).join('')||'<p class=hint>None yet.</p>')
     +'<h4>Public groups</h4>'+(d.pub.map(g=>`<div class=it>${av(g.name)}<div class=tx><b>${esc(g.name)}</b><span>${g.n} members</span></div><button class=ok data-do=gjoin data-v=${g.id}>Join</button></div>`).join('')||'<p class=hint>No public groups.</p>');
@@ -125,11 +162,11 @@ function drawChat(){if(!S.d)return;
   const ok=S.cur&&(S.cur[0]=='d'?S.d.friends.f.includes(other(S.cur)):grp(S.cur));if(!ok)S.cur=null;
   $('#empty').hidden=!!S.cur;$('#chat').hidden=!S.cur;document.body.classList.toggle('co',!!S.cur);if(!S.cur)return;
   const c=S.cur,g=c[0]=='g'?grp(c):null,ty=typers(c);
-  $('#hd').innerHTML=`<button class=bk data-do=back>←</button>${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b><span>${ty.length?'<i class=ty>'+esc(ty.join(', '))+' typing…</i>':g?g.members.length+' members':'friend'}</span></div>`
-    +(g?`<button data-do=acts>🎮</button><button data-do=ginfo>ⓘ</button>`:`<button data-do=call data-v=0>📞</button><button data-do=call data-v=1>🎥</button><button data-do=acts>🎮</button>`);
+  $('#hd').innerHTML=`<button class=bk data-do=back>←</button>${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b><span>${ty.length?'<i class=ty>'+esc(ty.join(', '))+' typing…</i>':g?g.members.length+' members':(S.d.on.includes(other(c))?'<i class=onl>online</i>':'offline')}</span></div>`
+    +`<button data-do=mute>${isMuted(c)?'🔕':'🔔'}</button>`+(g?`<button data-do=acts>🎮</button><button data-do=ginfo>ⓘ</button>`:`<button data-do=call data-v=0>📞</button><button data-do=call data-v=1>🎥</button><button data-do=acts>🎮</button>`);
   const box=$('#msgs'),at=S.fresh||box.scrollHeight-box.scrollTop-box.clientHeight<80;S.fresh=false;
   const mod=g&&roleOf(g,S.me)!='member';
-  box.innerHTML=(S.d.msgs[c]||[]).map(m=>m.s?`<div class=sys>${esc(m.t)}</div>`:`<div class="m ${m.f==S.me?'me':''}">${g&&m.f!=S.me?`<b class=who>${esc(m.f)}</b>`:''}${esc(m.t)}<time>${new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</time>${m.f==S.me||mod?`<u data-do=del data-v=${m.id}>✕</u>`:''}</div>`).join('')
+  box.innerHTML=(S.d.msgs[c]||[]).map(m=>mh(m,c,g,mod)).join('')
     +(ty.length?'<div class="m ty2"><i></i><i></i><i></i></div>':'');
   if(at)box.scrollTop=box.scrollHeight;applyBg()}
 const BG=['linear-gradient(135deg,#0f2027,#203a43,#2c5364)','linear-gradient(135deg,#42275a,#734b6d)','linear-gradient(135deg,#134e5e,#71b280)','linear-gradient(160deg,#232526,#414345)'];
@@ -151,7 +188,14 @@ function ginfo(){const g=grp(S.cur);if(!g)return closeModal();const my=roleOf(g,
 // ---------- actions ----------
 const DO={
  reg:()=>auth('reg'),
- open:v=>{S.cur=v;S.fresh=true;draw()},back:()=>{S.cur=null;draw()},
+ rx:v=>{const[id,e]=v.split('|');api('react',{id:+id,emo:e})},
+ rep:v=>{S.rep=+v;S.edit=0;rbar();$('#in').focus()},
+ edt:v=>{const m=(S.d.msgs[S.cur]||[]).find(x=>x.id==+v);if(!m)return;S.edit=+v;S.rep=0;$('#in').value=m.t;rbar();$('#in').focus()},
+ rcl:()=>{if(S.edit)$('#in').value='';S.rep=S.edit=0;rbar()},
+ mute:()=>{const m=muted(),i=m.indexOf(S.cur);i<0?m.push(S.cur):m.splice(i,1);localStorage['mu:'+S.me]=JSON.stringify(m);draw()},
+ ept:()=>{$('#ep').hidden=!$('#ep').hidden},emo:v=>{$('#in').value+=v;$('#in').focus()},
+ nreq:()=>Notification.requestPermission().then(draw),
+ open:v=>{S.cur=v;S.fresh=true;S.rep=S.edit=0;rbar();draw()},back:()=>{S.cur=null;draw()},
  facc:v=>api('facc',{to:v}),fdec:v=>api('fdec',{to:v}),frem:v=>confirm('Remove friend?')&&api('frem',{to:v}),
  del:v=>api('del',{id:+v}),
  gjoin:async v=>{const r=await api('gjoin',{id:v});r.id&&DO.open(r.id)},
@@ -176,9 +220,10 @@ const DO={
  gs:()=>{if(A&&A.host&&A.P.length>=G[A.k].min){A.ph='play';A.st=G[A.k].init(A.P);G[A.k].start&&G[A.k].start(A);bc()}},
  ga:()=>{if(A&&A.host){A.st=G[A.k].init(A.P);G[A.k].start&&G[A.k].start(A);bc()}},gi:v=>input(v),gx:()=>closeGame(true)};
 document.addEventListener('click',ev=>{const t=ev.target.closest('[data-do]');if(t){DO[t.dataset.do]?.(t.dataset.v);return}
-  const b=ev.target.closest('#tabs button');if(b){S.tab=b.dataset.t;draw()}});
+  const b=ev.target.closest('#tabs button');if(b){S.tab=b.dataset.t;draw();return}
+  const mm=ev.target.closest('.m');if(mm&&!ev.target.closest('a')){document.querySelectorAll('.m.sel').forEach(x=>x!=mm&&x.classList.remove('sel'));mm.classList.toggle('sel')}});
 const F={af:()=>auth('login'),
- f:()=>{const i=$('#in'),t=i.value.trim();if(!t)return;i.value='';api('msg',{c:S.cur,t})},
+ f:()=>{const i=$('#in'),t=i.value.trim();if(!t)return;i.value='';$('#ep').hidden=true;if(S.edit)api('edit',{id:S.edit,t});else api('msg',{c:S.cur,t,r:S.rep||0});S.rep=S.edit=0;rbar()},
  fa:async()=>{const r=await api('fadd',{to:$('#fu').value});if(!r.err)$('#fu').value=''},
  jc:async()=>{const r=await api('gjoin',{code:$('#jcode').value});r.id&&DO.open(r.id)},
  gn:async()=>{const r=await api('gnew',{name:$('#gname').value,pub:$('#gpub').checked});if(r.id){closeModal();DO.open(r.id)}},
