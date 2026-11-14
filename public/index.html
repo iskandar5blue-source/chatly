@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chatly</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2337b6ff'/%3E%3Cstop offset='1' stop-color='%237b4dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(%23g)'/%3E%3Cpath d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='%23fff' fill-opacity='.18'/%3E%3Ctext x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff' font-family='Arial,Helvetica,sans-serif'%3EC%3C/text%3E%3C/svg%3E">
 <style>
 :root{--bg:#0e1621;--p:#17212b;--p2:#202b36;--ac:#2b95e6;--t:#e8eef4;--m:#7f91a4;--mine:#2b5278;--line:#0b121a}
 *{box-sizing:border-box}[hidden]{display:none!important}
@@ -11,6 +12,7 @@ input:focus{border-color:var(--ac)}
 form{display:flex;gap:8px;flex-wrap:wrap}
 .red{background:#c0392b}.ok{background:#2e9e5b}
 #auth{max-width:340px;margin:12vh auto;padding:24px;background:var(--p);border-radius:14px}
+.logo{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:14px}.logo svg{width:84px;height:84px;filter:drop-shadow(0 6px 14px #2b95e655)}.logo h2{font-size:26px;letter-spacing:1px}
 #auth form{flex-direction:column}#auth h2{margin:0 0 10px}
 #app{display:grid;grid-template-columns:340px 1fr;height:100dvh}
 #side{background:var(--p);display:flex;flex-direction:column;border-right:1px solid var(--line);min-height:0}
@@ -56,7 +58,7 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 .bk{display:none}
 @media(max-width:700px){#app{grid-template-columns:1fr}#main{display:none}body.co #side{display:none}body.co #main{display:block}.bk{display:inline-block}}
 </style></head><body>
-<div id="auth"><h2 id="an">💬 Chatly</h2>
+<div id="auth"><div class="logo"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='lg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#37b6ff'/><stop offset='1' stop-color='#7b4dff'/></linearGradient></defs><path d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(#lg)'/><path d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='#fff' fill-opacity='.18'/><text x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='#fff' font-family='Arial,Helvetica,sans-serif'>C</text></svg><h2 id="an">Chatly</h2></div>
  <form id="af"><input id="u" placeholder="Username" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password">
  <button class="ok">Log in</button><button type="button" data-do="reg">Register</button></form></div>
 <div id="app" hidden>
@@ -73,7 +75,7 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 <div id="act" hidden></div><div id="toast" hidden></div>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
-const APP_NAME='Chatly';document.title=APP_NAME;$('#an').textContent='💬 '+APP_NAME;
+const APP_NAME='Chatly';document.title=APP_NAME;$('#an').textContent=APP_NAME;
 let es,C=null,A=null,Q=Promise.resolve(),lastT=0;
 const S={tab:'chats',cur:null,typing:{},d:null,token:localStorage.tok||'',me:localStorage.me||'',modal:null,ring:null};
 function toast(t){const x=$('#toast');x.textContent=t;x.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>x.hidden=true,3200)}
