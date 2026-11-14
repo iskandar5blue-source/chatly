@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chatly</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#17212b"><link rel="apple-touch-icon" href="/icon-192.png"><title>Chatly</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2337b6ff'/%3E%3Cstop offset='1' stop-color='%237b4dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(%23g)'/%3E%3Cpath d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='%23fff' fill-opacity='.18'/%3E%3Ctext x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff' font-family='Arial,Helvetica,sans-serif'%3EC%3C/text%3E%3C/svg%3E">
 <style>
 :root{--bg:#0e1621;--p:#17212b;--p2:#202b36;--ac:#2b95e6;--t:#e8eef4;--m:#7f91a4;--mine:#2b5278;--line:#0b121a}
@@ -62,7 +62,30 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 .rx{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}.rx b{background:#0004;border-radius:10px;padding:1px 7px;cursor:pointer;font-weight:400;font-size:12px}.rx b.me{outline:1px solid var(--ac)}
 .rq{border-left:3px solid var(--ac);padding:1px 8px;margin-bottom:4px;font-size:12px;color:#b8c7d6;background:#0003;border-radius:4px}.m a{color:#8ec9ff}.tk{margin-left:4px;font-size:11px}
 #rb{padding:6px 12px;background:var(--p2);font-size:13px;display:flex;justify-content:space-between;color:#b8c7d6}
-#ep{display:flex;flex-wrap:wrap;gap:2px;padding:6px;background:var(--p)}#ep button{background:none;font-size:20px;padding:2px 5px}
+#ep{display:block;max-height:280px;overflow:auto;padding:6px;background:var(--p)}#ep[hidden]{display:none}#ep button{background:none;font-size:20px;padding:2px 5px}
+.eph{display:flex;gap:4px;position:sticky;top:-6px;background:var(--p);padding:2px 0 6px;z-index:1}.eph button{font-size:13px!important;border-radius:14px;padding:4px 12px!important;background:var(--p2)!important}.eph button.on{background:var(--ac)!important;color:#fff}
+.eg{display:flex;flex-wrap:wrap;gap:2px}.epb h4{margin:8px 2px 4px;font-size:12px;color:#9fb1c3;font-weight:600}
+.sk{width:118px;height:118px;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;box-shadow:0 2px 6px #0006;text-align:center;padding:6px;box-sizing:border-box}
+.sk i{font-style:normal;font-size:56px;line-height:1}.sk span{font-size:13px;font-weight:700;line-height:1.1;text-shadow:0 1px 2px #0008}
+.sk.sm{width:76px;height:76px;border-radius:16px;gap:2px;padding:3px}.sk.sm i{font-size:34px}.sk.sm span{font-size:10px}
+#ep .sb{padding:2px!important}.sti{max-width:200px;max-height:200px;border-radius:12px;display:block}.sti.sm{width:76px;height:76px;object-fit:contain;max-width:none}
+.m.stk{background:none!important;padding:2px 4px}.m.stk .who{margin-left:4px}
+.mi{position:relative;display:inline-block}.mi u{position:absolute;top:-2px;right:-2px;background:#c0392b;border-radius:50%;width:16px;height:16px;line-height:16px;text-align:center;font-size:10px;cursor:pointer;text-decoration:none;z-index:1}
+.gq{display:flex;gap:6px;margin-bottom:6px}.gq input{flex:1}.gh{font-size:12px;color:#9fb1c3;padding:6px 2px}
+.gg img{height:90px;margin:2px;border-radius:8px;cursor:pointer}
+
+.fw{font-size:12px;color:var(--ac);margin-bottom:2px}.men{color:#8ec9ff;font-weight:600}.men.me{background:#f1c40f33;border-radius:4px;padding:0 2px}
+.spo{background:#7f91a4;color:transparent;border-radius:4px;cursor:pointer}.spo.on{background:#0003;color:inherit}
+.m code{background:#0004;border-radius:4px;padding:0 4px;font:12px ui-monospace,monospace}.m pre{background:#0005;padding:6px 8px;border-radius:8px;overflow:auto;margin:4px 0;font:12px ui-monospace,monospace;white-space:pre-wrap}
+.poll{min-width:220px;display:flex;flex-direction:column;gap:5px}.poll small{color:var(--m)}
+.po{position:relative;border-radius:8px;background:#0003;padding:6px 9px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;overflow:hidden}.po.my{outline:1px solid var(--ac)}
+.po .pbar{position:absolute;left:0;top:0;bottom:0;background:var(--ac);opacity:.28}.po span,.po em{position:relative;font-style:normal}.po em{color:var(--m)}
+.m.flash{outline:2px solid var(--ac)}
+#pb{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--p2);border-bottom:1px solid var(--line);font-size:13px}#pb span{flex:1;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#pb u{cursor:pointer;text-decoration:none;color:var(--m)}
+#dn{position:absolute;right:18px;bottom:78px;z-index:5;border-radius:50%;width:38px;height:38px;padding:0;box-shadow:0 2px 8px #0008}
+select{background:var(--p2);color:var(--t);border:1px solid #2a3948;border-radius:8px;padding:6px;margin-left:6px}
+.acc{width:26px;height:26px;border-radius:50%;padding:0;border:2px solid #fff3}
+.lt button:hover{background:#dde5ee}.lt input:not([type=checkbox]),.lt select{border-color:#cbd5df}.lt .m a,.lt .men{color:#1769aa}.lt .rq{color:#445}.lt .sys{color:#fff}
 #nb{padding:8px 12px;background:#1e3a52;display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:8px}
 .bk{display:none}
 @media(max-width:700px){#app{grid-template-columns:1fr}#main{display:none}body.co #side{display:none}body.co #main{display:block}.bk{display:inline-block}}
@@ -77,13 +100,13 @@ form{display:flex;gap:8px;flex-wrap:wrap}
   <input id="sq" placeholder="Search chats…" style="margin:6px 8px;flex:none">
   <div id="list"></div></aside>
  <main id="main"><div id="empty">Select a chat to start messaging</div>
-  <div id="chat" hidden><div id="hd"></div><div id="msgs"></div><div id="rb" hidden></div><div id="ep" hidden></div>
-   <form id="f"><button type="button" data-do="ept">😊</button><input id="in" placeholder="Write a message…" autocomplete="off"><button>➤</button></form></div></main>
+  <div id="chat" hidden><div id="hd"></div><div id="pb" hidden></div><div id="msgs"></div><button id="dn" hidden data-do="tobot">⬇</button><div id="rb" hidden></div><div id="ep" hidden></div>
+   <form id="f"><button type="button" data-do="ept">😊</button><button type="button" data-do="pollnew" title="Poll">📊</button><input id="in" placeholder="Write a message…" autocomplete="off"><button>➤</button></form></div></main>
 </div>
 <div id="modal" hidden><div id="box"></div></div>
 <div id="call" hidden><video id="rv" autoplay playsinline></video><audio id="ra" autoplay></audio><video id="lv" autoplay playsinline muted></video>
  <div id="cs"></div><div id="cc"><button data-do="cmute">🎤</button><button data-do="ccam">📷</button><button data-do="cscr">🖥</button><button data-do="cbg">🖼</button><button data-do="cend" class="red">📵</button></div></div>
-<div id="act" hidden></div><div id="toast" hidden></div>
+<input type="file" id="sfile" accept="image/*" hidden><div id="act" hidden></div><div id="toast" hidden></div>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const APP_NAME='Chatly';document.title=APP_NAME;$('#an').textContent=APP_NAME;
@@ -96,7 +119,7 @@ async function api(a,b={}){try{const r=await fetch('/api',{method:'POST',body:JS
 const av=n=>{let h=0;for(const c of n)h+=c.charCodeAt(0)*7;return`<div class=av style="background:hsl(${h%360},45%,42%)">${esc((n[0]||'?').toUpperCase())}</div>`};
 const grp=c=>S.d.groups.find(g=>'g:'+g.id==c);
 const other=c=>c.slice(2).split('|').find(x=>x!=S.me);
-const nameOf=c=>c[0]=='d'?other(c):(grp(c)||{name:'?'}).name;
+const nameOf=c=>c[0]=='d'?dn(other(c)):(grp(c)||{name:'?'}).name;
 const roleOf=(g,u)=>g.owner==u?'owner':g.admins.includes(u)?'admin':'member';
 const typers=c=>Object.keys(S.typing).filter(k=>k.startsWith(c+'|')&&Date.now()-S.typing[k]<3500).map(k=>k.slice(c.length+1));
 const dmId=u=>'d:'+[S.me,u].sort().join('|');
@@ -115,26 +138,120 @@ async function refresh(){const r=await api('sync');if(r.err||!r.me)return;const 
   S.lastId=first?mx:Math.max(S.lastId,mx);fresh.forEach(notify);draw()}
 setInterval(()=>{for(const k in S.typing)if(Date.now()-S.typing[k]>4000){delete S.typing[k];if(S.d){drawChat();if(S.tab=='chats'&&!focusIn($('#list')))drawList()}}},1000);
 
+
+// ---------- stickers / GIFs ----------
+const isSt=t=>/^(sk|img|gif):/.test(t);
+const pv=t=>t.startsWith('sk:')?'🏷 Sticker '+t.slice(3).split('|')[0]:t.startsWith('img:')?'🏷 Sticker':t.startsWith('gif:')?'🎞 GIF':t;
+const hue=s=>{let h=0;for(const c of s)h=(h*31+c.codePointAt(0))%360;return h};
+const skH=(e,c,sm)=>`<div class="sk${sm?' sm':''}" style="background:linear-gradient(135deg,hsl(${hue(e)},60%,45%),hsl(${(hue(e)+50)%360},60%,28%))"><i>${esc(e)}</i><span>${esc(c)}</span></div>`;
+const imgH=(t,sm)=>{const u=t.startsWith('img:')?'/img/'+encodeURIComponent(t.slice(4)):t.slice(4);
+  return /^(\/img\/|https:\/\/)/.test(u)?`<img class="sti${sm?' sm':''}" src="${esc(u)}" loading=lazy onerror="this.replaceWith(document.createTextNode('🖼 (image not available)'))">`:esc(t)};
+const stH=(t,sm)=>t.startsWith('sk:')?(([e,c])=>skH(e,c||'',sm))(t.slice(3).split('|')):imgH(t,sm);
+const SKP=[
+['Reactions',"👍 Zo'r!;👌 Joyida;🙏 Rahmat;👏 Barakalla;🤝 Kelishdik;💪 Kuchli;🙌 Ura!;🫡 Xo'p bo'ladi;🤷 Bilmayman;🙄 Ha albatta;🤔 O'ylab ko'ray;😎 Cool;😏 Hmm;🤯 Voy-bo'y;👀 Ko'ryapman;🫶 Sendan"],
+['Greetings',"👋 Salom!;🌅 Xayrli tong;🌙 Xayrli tun;☀️ Xayrli kun;🤗 Qalaysan?;🫂 Quchoq;😴 Uxlayman;🚶 Ketdim;🔙 Qaytdim;📞 Qo'ng'iroq qil;⏰ Kechikdim;🍽 Ovqatda;🏠 Uydaman;🚗 Yo'ldaman;📚 Darsda;💼 Ishdaman"],
+['Love',"😍 Seni sevaman;🥰 Sog'indim;😘 O'pich;💕 Yuragim;💖 Sevgi;💌 Xat senga;🌹 Gul senga;😳 Uyaldim;🥺 Iltimos;💑 Juftlik;💘 Aniq tegdi;😻 Mushukcha;🫰 Yurak;💞 Doim birga;🧸 Ayiqcha;💋 Mua!"],
+['Funny',"😂 Ha-ha-ha;🤣 O'laman;😜 Hazil;🤪 Jinni;🥴 Boshim aylandi;😈 Shayton;🤡 Masxaraboz;💀 Halok;🙈 Ko'rmadim;🙉 Eshitmadim;🙊 Jim;🤫 Sir;😅 Uyatli;🫠 Erib ketdim;🥳 Bayram;😆 Kuldim"],
+['Mood',"😢 Yig'layman;😭 Voy-voy;😡 G'azab;🤬 Jahlim chiqdi;😤 Bas!;😞 Afsus;😔 Xafa;🤒 Kasalman;🥶 Sovuq;🥵 Issiq;😱 Qo'rqdim;😰 Tashvish;🤦 Xato;😩 Charchadim;💔 Yurak sindi;🆘 Yordam"],
+['Celebrate',"🎉 Tabriklayman!;🎂 Tug'ilgan kun;🎁 Sovg'a;🏆 G'olib;🥇 Birinchi;🎊 Bayram muborak;🍾 Ichamiz;✨ Ajoyib;🔥 Olov!;💯 Yuz foiz;🚀 Ketdik!;⭐ Yulduz;🎈 Sharlar;🪅 Bayram;🎆 Salyut;🌟 Eng zo'r"],
+['Animals',"🐱 Miyov;🐶 Vov;🐼 Panda;🦊 Tulki;🐸 Baqa;🐵 Maymun;🦁 Sher;🐯 Yo'lbars;🐰 Quyon;🐻 Ayiq;🐧 Pingvin;🦄 Yakkashox;🐢 Sekin;🐙 Sakkizoyoq;🦉 Boyqush;🐝 Asalari"],
+['Food',"🍕 Pitsa;🍔 Burger;🍟 Fri;🍜 Lag'mon;🍚 Osh!;🥟 Manti;🍉 Tarvuz;🍰 Tort;☕ Choy;🍦 Muzqaymoq;🍫 Shokolad;🍿 Popkorn;🥗 Salat;🍳 Nonushta;🍎 Olma;🧃 Sharbat"],
+['Life',"🎮 O'ynaymizmi?;⚽ Futbol;🏀 Basketbol;🎵 Musiqa;🎬 Kino;💻 Kod yozyapman;📸 Selfi;✈️ Sayohat;🏖 Dam olish;🌧 Yomg'ir;❄️ Qor;🌈 Kamalak;💸 Pul;🛌 Yotdim;📖 O'qiyman;🎧 Tinglayman"]
+].map(([n,s])=>[n,s.split(';').map(x=>{const i=x.indexOf(' ');return[x.slice(0,i),x.slice(i+1)]})]);
+const EMO="😀 😃 😄 😁 😆 😅 😂 🤣 🙂 😉 😊 😇 🥰 😍 🤩 😘 😋 😛 😜 🤪 🤗 🤭 🤔 🤨 😐 😑 😶 🙄 😏 😴 😪 😌 🤤 😷 🤒 🤕 🤢 🥵 🥶 😵 🤯 🤠 🥳 😎 🤓 😕 😟 🙁 😮 😲 😳 🥺 😢 😭 😱 😖 😞 😓 😩 😫 😤 😡 🤬 😈 💀 💩 🤡 👻 👽 🤖 🙈 🙉 🙊 👍 👎 👌 ✌️ 🤞 🤟 🤘 👏 🙌 🙏 🤝 💪 👀 🧠 ❤️ 🧡 💛 💚 💙 💜 🖤 💔 💕 💖 💯 🔥 ✨ ⭐ 🎉 🎊 🎁 🏆 ✅ ❌ ❓ ❗ 🌹 🌞 🌙 🌈 ☕ 🍕 🍔 🍉 🎂 ⚽ 🎮 🎵 🚀".split(' ');
+const mine=()=>{try{return JSON.parse(localStorage['ms:'+S.me]||'[]')}catch{return[]}};
+const setMine=a=>{localStorage['ms:'+S.me]=JSON.stringify(a.slice(0,60))};
+function epDraw(){const t=S.ept||'emoji',tabs=[['emoji','😊 Emoji'],['st','🏷 Stickers'],['gif','🎞 GIF'],['my','⭐ Mine']];let b='';
+  if(t=='emoji')b='<div class=eg>'+EMO.map(e=>`<button type=button data-do=emo data-v="${e}">${e}</button>`).join('')+'</div>';
+  else if(t=='st')b=SKP.map(([n,a],pi)=>`<h4>${n}</h4><div class=eg>`+a.map(([e,c],i)=>`<button type=button class=sb data-do=sk data-v="${pi}|${i}">${skH(e,c,1)}</button>`).join('')+'</div>').join('');
+  else if(t=='gif')b='<div class=gq><input id=gq placeholder="Search GIFs…" autocomplete=off><button type=button data-do=gfs>Search</button></div><div id=gres class=gg><div class=gh>Loading…</div></div>';
+  else{const m=mine();b='<div class=gq><button type=button data-do=upl>⬆ Upload image / GIF</button><button type=button data-do=gurl>🔗 Add GIF link</button></div>'
+    +(m.length?'<div class=eg>'+m.map((x,i)=>`<span class=mi><button type=button class=sb data-do=mys data-v=${i}>${stH(x,1)}</button><u data-do=mrm data-v=${i}>✕</u></span>`).join('')+'</div>':'<div class=gh>Your own stickers and GIFs appear here. Upload a picture (it is shrunk to a small sticker) or paste a link to any GIF.</div>')}
+  $('#ep').innerHTML=`<div class=eph>${tabs.map(([k,l])=>`<button type=button data-do=ept2 data-v=${k} class="${k==t?'on':''}">${l}</button>`).join('')}</div><div class=epb>${b}</div>`;
+  if(t=='gif')gifGo('')}
+async function gifGo(q){const r=await api('gifs',{q}),el=$('#gres');if(!el)return;
+  if(r.err){el.innerHTML='<div class=gh>Search failed</div>';return}
+  if(r.nokey){el.innerHTML='<div class=gh>GIF search is not set up yet (the site owner must add a GIPHY_KEY). You can still use ⭐ Mine → 🔗 Add GIF link.</div>';return}
+  S.gifs=r.g;el.innerHTML=r.g.length?r.g.map((x,i)=>`<img src="${esc(x.p)}" data-do=gif data-v=${i} loading=lazy>`).join(''):'<div class=gh>No GIFs found</div>'}
+function sendSt(t){if(!S.cur)return;api('msg',{c:S.cur,t,r:S.rep||0});S.rep=S.edit=0;rbar();$('#ep').hidden=true}
+async function upSt(f){if(!f)return;let d;
+  try{if(/^image\/(gif|webp)$/.test(f.type)&&f.size<=45000)d=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});
+    else{if(f.type=='image/gif'&&f.size>45000)toast('Animated GIF is too big, saved as a still. Use "Add GIF link" for animation.');
+      const bm=await createImageBitmap(f);let z=192,q=.85;
+      for(let i=0;i<7;i++){const k=Math.min(1,z/Math.max(bm.width,bm.height)),cv=document.createElement('canvas');cv.width=Math.max(1,bm.width*k|0);cv.height=Math.max(1,bm.height*k|0);
+        cv.getContext('2d').drawImage(bm,0,0,cv.width,cv.height);d=cv.toDataURL('image/webp',q);if(d.length<=60000)break;z*=.75;q*=.85}}}
+  catch{return toast('Cannot read this image')}
+  const r=await api('img',{d});if(r.id){const m=mine().filter(x=>x!='img:'+r.id);m.unshift('img:'+r.id);setMine(m);S.ept='my';epDraw();toast('Added to your stickers')}}
+
+
+// ---------- v3 features ----------
+const pfOf=u=>((S.d&&S.d.pf)||{})[u]||{},dn=u=>pfOf(u).n||u,bl=()=>(S.d&&S.d.bl)||[];
+const ago=t=>{const d=Date.now()-t;if(d<60000)return'just now';if(d<3600000)return Math.floor(d/60000)+' min ago';const dt=new Date(t);return(new Date().toDateString()==dt.toDateString()?'today at ':dt.toLocaleDateString([],{month:'short',day:'numeric'})+' at ')+hm(t)};
+const lsText=u=>S.d.on.includes(u)?'<i class=onl>online</i>':(S.d.ls||{})[u]?'last seen '+ago(S.d.ls[u]):'offline';
+const dayLbl=ts=>{const d=new Date(ts),n=new Date(),y=new Date(Date.now()-864e5);return d.toDateString()==n.toDateString()?'Today':d.toDateString()==y.toDateString()?'Yesterday':d.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'})};
+const canPin=c=>c[0]=='d'||(grp(c)&&roleOf(grp(c),S.me)!='member');
+const cps=()=>{try{return JSON.parse(localStorage['cp:'+S.me]||'[]')}catch{return[]}},cpin=c=>cps().includes(c);
+const drafts=()=>{try{return JSON.parse(localStorage['dr:'+S.me]||'{}')}catch{return{}}},draft=c=>drafts()[c]||'';
+const setDraft=(c,t)=>{const d=drafts();t?d[c]=t:delete d[c];localStorage['dr:'+S.me]=JSON.stringify(d)};
+function fmt(t){let s=esc(t);const ph=[];const hold=x=>{ph.push(x);return'\u0000'+(ph.length-1)+'\u0000'};
+  s=s.replace(/```([\s\S]+?)```/g,(_,x)=>hold('<pre>'+x.replace(/^\n/,'')+'</pre>')).replace(/`([^`\n]+)`/g,(_,x)=>hold('<code>'+x+'</code>'));
+  s=s.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/__([^_\n]+)__/g,'<i>$1</i>').replace(/~~([^~\n]+)~~/g,'<s>$1</s>').replace(/\|\|([^|\n]+)\|\|/g,'<span class=spo>$1</span>');
+  s=linkify(s).replace(/(^|[\s>])@([a-z0-9_]{3,20})\b/g,(a,b,u)=>b+'<span class="men'+(u==S.me?' me':'')+'">@'+u+'</span>');
+  return s.replace(/\u0000(\d+)\u0000/g,(_,i)=>ph[i])}
+const pollH=m=>{const tot=new Set(m.poll.o.flatMap(o=>o.v)).size;
+  return`<div class=poll><b>📊 ${esc(m.t.slice(3))}</b><small>${m.poll.mu?'Multiple answers':'Single answer'} · ${tot} voter${tot==1?'':'s'}</small>`
+   +m.poll.o.map((o,i)=>{const pc=tot?Math.round(o.v.length*100/tot):0,my=o.v.includes(S.me);
+     return`<div class="po${my?' my':''}" data-do=vote data-v="${m.id}|${i}"><div class=pbar style="width:${pc}%"></div><span>${my?'✓ ':''}${esc(o.t)}</span><em>${o.v.length}</em></div>`}).join('')+`</div>`};
+const blockedH=()=>bl().length?'<h4>Blocked</h4>'+bl().map(u=>`<div class=it>${av(u)}<div class=tx><b>${esc(u)}</b></div><button data-do=unb data-v=${u}>Unblock</button></div>`).join(''):'';
+const ACC=['#2b95e6','#2e9e5b','#e67e22','#9b59b6','#e84393','#e74c3c'];
+function applyTheme(){const r=document.documentElement.style,l=localStorage.th=='light';
+  const T=l?{'--bg':'#e9eef3','--p':'#ffffff','--p2':'#eef2f6','--t':'#17212b','--m':'#6b7c8d','--mine':'#cfe8ff','--line':'#d5dde5'}:{'--bg':'#0e1621','--p':'#17212b','--p2':'#202b36','--t':'#e8eef4','--m':'#7f91a4','--mine':'#2b5278','--line':'#0b121a'};
+  for(const k in T)r.setProperty(k,T[k]);r.setProperty('--ac',localStorage.ac||'#2b95e6');document.body.classList.toggle('lt',l)}
+applyTheme();
+function cmenu(){const c=S.cur;if(!c||!S.d)return closeModal();const g=c[0]=='g'?grp(c):null,u=g?null:other(c),p=u?pfOf(u):{},ttl=(S.d.ttl||{})[c]||0,blk=u&&bl().includes(u),adm=!g||roleOf(g,S.me)!='member';
+  $('#box').innerHTML=`<div class=row>${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b><span>${g?(g.members.length+' members'):'@'+esc(u)+' · '+lsText(u)}</span></div></div>`
+   +(g&&g.desc?`<div class=hint>${esc(g.desc)}</div>`:'')+(p.b?`<div class=hint>${esc(p.b)}</div>`:'')
+   +`<button data-do=mute>${isMuted(c)?'🔔 Unmute notifications':'🔕 Mute notifications'}</button><button data-do=cpin>${cpin(c)?'📌 Unpin chat from top':'📌 Pin chat to top'}</button><button data-do=csearch>🔍 Search in chat</button>`
+   +(adm?`<label class=hint>⏱ Auto-delete messages<select id=ttl>${[[0,'Off'],[3600,'1 hour'],[86400,'1 day'],[604800,'1 week']].map(([v,l])=>`<option value=${v} ${v==ttl?'selected':''}>${l}</option>`).join('')}</select></label>`:'')
+   +(g?`<button data-do=ginfo>ⓘ Group info and members</button>`:`<button class=red data-do=blk data-v=${blk?0:1}>${blk?'Unblock user':'🚫 Block user'}</button>`)
+   +(adm?`<button class=red data-do=clr>🗑 Clear history for everyone</button>`:'')}
+function csearch(){if(!$('#csq')){$('#box').innerHTML='<h3>Search in chat</h3><input id=csq placeholder="Type to search…" autocomplete=off><div id=csr></div>';setTimeout(()=>$('#csq')&&$('#csq').focus(),50)}}
+function csRes(q){q=q.trim().toLowerCase();const el=$('#csr');if(!el)return;if(!q){el.innerHTML='';return}
+  const r=(S.d.msgs[S.cur]||[]).filter(m=>!m.s&&pv(m.t).toLowerCase().includes(q)).slice(-30).reverse();
+  el.innerHTML=r.map(m=>`<div class=it data-do=goto data-v=${m.id}><div class=tx><b>${esc(dn(m.f))} <small>${new Date(m.ts).toLocaleDateString()} ${hm(m.ts)}</small></b><span>${esc(pv(m.t))}</span></div></div>`).join('')||'<p class=hint>Nothing found</p>'}
+function fwdModal(){$('#box').innerHTML='<h3>Forward to…</h3>'+chats().map(({c})=>`<div class=it data-do=fwdto data-v="${esc(c)}">${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b></div></div>`).join('')}
+function pollModal(){if($('#pq'))return;$('#box').innerHTML='<h3>📊 New poll</h3><form id=pl><input id=pq placeholder="Question" maxlength=200>'+[1,2,3,4,5,6].map(i=>`<input class=po-i placeholder="Option ${i}${i<3?'':' (optional)'}" maxlength=80>`).join('')+'<label><input type=checkbox id=pmu> Allow multiple answers</label><button class=ok>Send poll</button></form>'}
+function profileModal(){if($('#pfn'))return;const p=pfOf(S.me);
+  $('#box').innerHTML=`<h3>Accounts</h3>`+S.d.profiles.map(x=>`<div class="it ${x==S.me?'on':''}" data-do=sw data-v=${x}>${av(x)}<div class=tx><b>${esc(x)}</b></div></div>`).join('')
+   +`<form id=np class=row><input id=npn placeholder="New username (new account)"><button>Create</button></form>`
+   +`<h3>Profile</h3><form id=pf><input id=pfn placeholder="Display name" maxlength=32 value="${esc(p.n||'')}"><input id=pfb placeholder="Bio" maxlength=200 value="${esc(p.b||'')}"><button class=ok>Save profile</button></form>`
+   +`<h3>Appearance</h3><div class=row><button data-do=theme>🌗 Light / dark</button>${ACC.map(a=>`<button class=acc style="background:${a}" data-do=acc data-v="${a}"></button>`).join('')}</div>`
+   +`<div class=row><button data-do=snd>🔔 Sound on/off</button><button data-do=bgm>🎨 Chat background</button></div>`
+   +`<h3>Security</h3><form id=pwf><input id=pw0 type=password placeholder="Current password" autocomplete=current-password><input id=pw1 type=password placeholder="New password" autocomplete=new-password><button>Change password</button></form>`
+   +`<div class=row>${S.inst?'<button class=ok data-do=inst>⬇ Install app</button>':''}<button class=red data-do=lo>Log out</button></div>`}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();S.inst=e});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+
 // ---------- unread / notifications / message helpers ----------
 const unread=c=>{const rd=S.d.rd[c]||0;return(S.d.msgs[c]||[]).filter(m=>!m.s&&m.f!=S.me&&m.id>rd).length};
 const muted=()=>{try{return JSON.parse(localStorage['mu:'+S.me]||'[]')}catch{return[]}},isMuted=c=>muted().includes(c);
 const hm=ts=>new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 const linkify=t=>t.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target=_blank rel=noopener>$1</a>');
 function mh(m,c,g,mod){if(m.s)return`<div class=sys>${esc(m.t)}</div>`;const me=m.f==S.me,q=m.r?(S.d.msgs[c]||[]).find(x=>x.id==m.r):null,pr=S.d.pr[c]||0;
-  return`<div class="m ${me?'me':''}"><div class=ma>${['👍','❤️','😂','🔥'].map(e=>`<span data-do=rx data-v="${m.id}|${e}">${e}</span>`).join('')}<span data-do=rep data-v=${m.id}>↩</span>${me?`<span data-do=edt data-v=${m.id}>✏️</span>`:''}${me||mod?`<span data-do=del data-v=${m.id}>🗑</span>`:''}</div>`
-   +(g&&!me?`<b class=who>${esc(m.f)}</b>`:'')+(m.r?`<div class=rq>${q?`<b>${esc(q.f)}</b> ${esc(q.t.slice(0,60))}`:'Deleted message'}</div>`:'')
-   +linkify(esc(m.t))+`<time>${m.e?'edited · ':''}${hm(m.ts)}</time>`+(me&&c[0]=='d'?`<span class=tk style="color:${m.id<=pr?'#6ab3f3':'#9fb1c3'}">${m.id<=pr?'✓✓':'✓'}</span>`:'')
+  return`<div class="m ${me?'me':''}${isSt(m.t)?' stk':''}" data-id=${m.id}><div class=ma>${['👍','❤️','😂','🔥'].map(e=>`<span data-do=rx data-v="${m.id}|${e}">${e}</span>`).join('')}<span data-do=rep data-v=${m.id}>↩</span>${m.poll?'':`<span data-do=fwdm data-v=${m.id}>⤳</span>`}${canPin(c)?`<span data-do=pinm data-v=${m.id}>📌</span>`:''}${m.poll||isSt(m.t)?'':`<span data-do=cpy data-v=${m.id}>📋</span>`}${me&&!isSt(m.t)&&!m.poll?`<span data-do=edt data-v=${m.id}>✏️</span>`:''}${me||mod?`<span data-do=del data-v=${m.id}>🗑</span>`:''}</div>`
+   +(g&&!me?`<b class=who>${esc(dn(m.f))}</b>`:'')+(m.fw?`<div class=fw>⤳ Forwarded from <b>${esc(dn(m.fw))}</b></div>`:'')+(m.r?`<div class=rq>${q?`<b>${esc(q.f)}</b> ${esc(pv(q.t).slice(0,60))}`:'Deleted message'}</div>`:'')
+   +(m.poll?pollH(m):isSt(m.t)?stH(m.t):fmt(m.t))+`<time>${m.e?'edited · ':''}${hm(m.ts)}</time>`+(me&&c[0]=='d'?`<span class=tk style="color:${m.id<=pr?'#6ab3f3':'#9fb1c3'}">${m.id<=pr?'✓✓':'✓'}</span>`:'')
    +(m.rx?`<div class=rx>${Object.entries(m.rx).map(([e,u])=>`<b class="${u.includes(S.me)?'me':''}" data-do=rx data-v="${m.id}|${e}">${e} ${u.length}</b>`).join('')}</div>`:'')+`</div>`}
 function markRead(){if(!S.cur||document.hidden||!S.d)return;const m=S.d.msgs[S.cur]||[],last=m.length?m[m.length-1].id:0;
   if(last>(S.d.rd[S.cur]||0)){S.d.rd[S.cur]=last;api('read',{c:S.cur,id:last})}}
 function updTitle(){const n=Object.keys(S.d.msgs).reduce((a,c)=>a+(isMuted(c)?0:unread(c)),0);document.title=(n?'('+n+') ':'')+APP_NAME}
-let AC;const beep=()=>{try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;g.gain.value=.06;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.12)}catch{}};
-function notify({c,m}){if(isMuted(c)||(S.cur==c&&!document.hidden))return;beep();const t=c[0]=='g'?nameOf(c)+' · '+m.f:m.f;
-  if(document.hidden&&window.Notification&&Notification.permission=='granted'){try{const n=new Notification(t,{body:m.t.slice(0,120),tag:c});n.onclick=()=>{focus();DO.open(c);n.close()}}catch{}}
-  else toast('💬 '+t+': '+m.t.slice(0,60))}
+let AC;const beep=()=>{if(localStorage.snd=='0')return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;g.gain.value=.06;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.12)}catch{}};
+function notify({c,m}){const men=m.t.includes('@'+S.me);if((isMuted(c)&&!men)||(S.cur==c&&!document.hidden))return;beep();const t=c[0]=='g'?nameOf(c)+' · '+m.f:m.f;
+  if(document.hidden&&window.Notification&&Notification.permission=='granted'){try{const n=new Notification(t,{body:pv(m.t).slice(0,120),tag:c});n.onclick=()=>{focus();DO.open(c);n.close()}}catch{}}
+  else toast('💬 '+t+': '+pv(m.t).slice(0,60))}
 function rbar(){const r=$('#rb'),id=S.edit||S.rep,m=(S.d&&S.cur?S.d.msgs[S.cur]||[]:[]).find(x=>x.id==id);r.hidden=!id;if(!id)return;
-  r.innerHTML=`<span>${S.edit?'✏️ Editing message':'↩ Reply to '+esc(m?m.f:'')+': '+esc(m?m.t.slice(0,50):'')}</span><span data-do=rcl style="cursor:pointer">✕</span>`}
-$('#ep').innerHTML=['😀','😂','😍','🥰','😎','🤔','😢','😡','👍','👎','🙏','👏','🔥','❤️','💯','🎉','😴','🤝','😅','🙌','💪','👀','✅','❌'].map(e=>`<button type=button data-do=emo data-v=${e}>${e}</button>`).join('');
+  r.innerHTML=`<span>${S.edit?'✏️ Editing message':'↩ Reply to '+esc(m?m.f:'')+': '+esc(m?pv(m.t).slice(0,50):'')}</span><span data-do=rcl style="cursor:pointer">✕</span>`}
+$('#sfile').addEventListener('change',e=>{upSt(e.target.files[0]);e.target.value=''});$('#ep').addEventListener('keydown',e=>{if(e.key=='Enter'&&e.target.id=='gq'){e.preventDefault();gifGo(e.target.value)}});
 $('#sq').addEventListener('input',e=>{S.q=e.target.value.toLowerCase();drawList()});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.d)draw()});addEventListener('focus',()=>{if(S.d)draw()});
 
@@ -146,14 +263,14 @@ function draw(){if(!S.d)return;
   $('#nb').hidden=!(window.Notification&&Notification.permission=='default');$('#sq').hidden=S.tab!='chats';
   if(S.modal&&!$('#modal').hidden&&!focusIn($('#box')))S.modal()}
 function chats(){const d=S.d;return[...d.friends.f.map(f=>dmId(f)),...d.groups.map(g=>'g:'+g.id)]
-  .map(c=>{const m=d.msgs[c]||[];return{c,last:m[m.length-1]}}).sort((x,y)=>(y.last?.ts||0)-(x.last?.ts||0)).filter(({c})=>!S.q||nameOf(c).toLowerCase().includes(S.q))}
+  .map(c=>{const m=d.msgs[c]||[];return{c,last:m[m.length-1]}}).sort((x,y)=>(+cpin(y.c)-+cpin(x.c))||((y.last?.ts||0)-(x.last?.ts||0))).filter(({c})=>!S.q||nameOf(c).toLowerCase().includes(S.q))}
 function drawList(){const d=S.d,f=d.friends;let h='';
   if(S.tab=='chats')h=chats().map(({c,last})=>{const ty=typers(c),n=unread(c),mu=isMuted(c);
-    return`<div class="it ${c==S.cur?'on':''}" data-do=open data-v="${esc(c)}">${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b><span>${ty.length?'<i class=ty>typing…</i>':last?esc((last.s?'':last.f==S.me?'You: ':c[0]=='g'?last.f+': ':'')+last.t):'No messages yet'}</span></div><div class=rt><span class=tm>${last?hm(last.ts):''}</span><span>${mu?'🔕 ':''}${n?`<span class="bdg ${mu?'mu':''}">${n>9?'9+':n}</span>`:''}</span></div></div>`}).join('')||'<p class=hint>No chats yet. Add friends or join a group.</p>';
+    return`<div class="it ${c==S.cur?'on':''}" data-do=open data-v="${esc(c)}">${av(nameOf(c))}<div class=tx><b>${cpin(c)?'📌 ':''}${esc(nameOf(c))}</b><span>${ty.length?'<i class=ty>typing…</i>':last?esc((last.s?'':last.f==S.me?'You: ':c[0]=='g'?last.f+': ':'')+pv(last.t)):'No messages yet'}</span></div><div class=rt><span class=tm>${last?hm(last.ts):''}</span><span>${mu?'🔕 ':''}${n?`<span class="bdg ${mu?'mu':''}">${n>9?'9+':n}</span>`:''}</span></div></div>`}).join('')||'<p class=hint>No chats yet. Add friends or join a group.</p>';
   else if(S.tab=='friends')h=`<form id=fa class=row><input id=fu placeholder="Add friend by username"><button>Add</button></form>`
     +(f.i.length?'<h4>Requests</h4>':'')+f.i.map(u=>`<div class=it>${av(u)}<div class=tx><b>${esc(u)}</b><span>wants to be friends</span></div><button class=ok data-do=facc data-v=${u}>✓</button><button data-do=fdec data-v=${u}>✕</button></div>`).join('')
     +(f.o.length?'<h4>Sent</h4>':'')+f.o.map(u=>`<div class=it>${av(u)}<div class=tx><b>${esc(u)}</b><span>pending</span></div><button data-do=fdec data-v=${u}>Cancel</button></div>`).join('')
-    +'<h4>Friends</h4>'+(f.f.map(u=>`<div class=it data-do=open data-v="${dmId(u)}">${av(u)}<div class=tx><b>${esc(u)}</b><span>${S.d.on.includes(u)?'<i class=onl>online</i>':''}</span></div><button data-do=frem data-v=${u}>✕</button></div>`).join('')||'<p class=hint>No friends yet.</p>');
+    +'<h4>Friends</h4>'+(f.f.map(u=>`<div class=it data-do=open data-v="${dmId(u)}">${av(u)}<div class=tx><b>${esc(u)}</b><span>${lsText(u)}</span></div><button data-do=frem data-v=${u}>✕</button></div>`).join('')||'<p class=hint>No friends yet.</p>')+blockedH();
   else h=`<div class=row><button class=wide data-do=gnew>＋ New group</button></div><form id=jc class=row><input id=jcode placeholder="Invite code"><button>Join</button></form><h4>My groups</h4>`
     +(d.groups.map(g=>`<div class=it data-do=open data-v="g:${g.id}">${av(g.name)}<div class=tx><b>${esc(g.name)}</b><span>${g.members.length} members · ${roleOf(g,S.me)}</span></div></div>`).join('')||'<p class=hint>None yet.</p>')
     +'<h4>Public groups</h4>'+(d.pub.map(g=>`<div class=it>${av(g.name)}<div class=tx><b>${esc(g.name)}</b><span>${g.n} members</span></div><button class=ok data-do=gjoin data-v=${g.id}>Join</button></div>`).join('')||'<p class=hint>No public groups.</p>');
@@ -162,11 +279,14 @@ function drawChat(){if(!S.d)return;
   const ok=S.cur&&(S.cur[0]=='d'?S.d.friends.f.includes(other(S.cur)):grp(S.cur));if(!ok)S.cur=null;
   $('#empty').hidden=!!S.cur;$('#chat').hidden=!S.cur;document.body.classList.toggle('co',!!S.cur);if(!S.cur)return;
   const c=S.cur,g=c[0]=='g'?grp(c):null,ty=typers(c);
-  $('#hd').innerHTML=`<button class=bk data-do=back>←</button>${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b><span>${ty.length?'<i class=ty>'+esc(ty.join(', '))+' typing…</i>':g?g.members.length+' members':(S.d.on.includes(other(c))?'<i class=onl>online</i>':'offline')}</span></div>`
-    +`<button data-do=mute>${isMuted(c)?'🔕':'🔔'}</button>`+(g?`<button data-do=acts>🎮</button><button data-do=ginfo>ⓘ</button>`:`<button data-do=call data-v=0>📞</button><button data-do=call data-v=1>🎥</button><button data-do=acts>🎮</button>`);
+  $('#hd').innerHTML=`<button class=bk data-do=back>←</button>${av(nameOf(c))}<div class=tx data-do=cmenu style="cursor:pointer"><b>${esc(nameOf(c))}</b><span>${ty.length?'<i class=ty>'+esc(ty.join(', '))+' typing…</i>':g?g.members.length+' members':lsText(other(c))}</span></div>`
+    +`<button data-do=csearch>🔍</button><button data-do=mute>${isMuted(c)?'🔕':'🔔'}</button>`+(g?`<button data-do=acts>🎮</button><button data-do=ginfo>ⓘ</button>`:`<button data-do=call data-v=0>📞</button><button data-do=call data-v=1>🎥</button><button data-do=acts>🎮</button>`);
+  $('#hd').insertAdjacentHTML('beforeend','<button data-do=cmenu>⋮</button>');
+  const pinId=(S.d.pins||{})[c],pm=pinId&&(S.d.msgs[c]||[]).find(x=>x.id==pinId);$('#pb').hidden=!pm;
+  if(pm)$('#pb').innerHTML=`<span data-do=goto data-v=${pm.id}>📌 <b>Pinned</b> · ${esc(pv(pm.t).slice(0,90))}</span>`+(canPin(c)?'<u data-do=unpin>✕</u>':'');
   const box=$('#msgs'),at=S.fresh||box.scrollHeight-box.scrollTop-box.clientHeight<80;S.fresh=false;
   const mod=g&&roleOf(g,S.me)!='member';
-  box.innerHTML=(S.d.msgs[c]||[]).map(m=>mh(m,c,g,mod)).join('')
+  let pd='';box.innerHTML=(S.d.msgs[c]||[]).map(m=>{const dd=new Date(m.ts).toDateString();let x='';if(dd!=pd){pd=dd;x=`<div class=sys>${dayLbl(m.ts)}</div>`}return x+mh(m,c,g,mod)}).join('')
     +(ty.length?'<div class="m ty2"><i></i><i></i><i></i></div>':'');
   if(at)box.scrollTop=box.scrollHeight;applyBg()}
 const BG=['linear-gradient(135deg,#0f2027,#203a43,#2c5364)','linear-gradient(135deg,#42275a,#734b6d)','linear-gradient(135deg,#134e5e,#71b280)','linear-gradient(160deg,#232526,#414345)'];
@@ -174,12 +294,12 @@ function applyBg(){const b=localStorage.bg||'0';$('#msgs').style.background=b=='
 
 // ---------- modals ----------
 function show(fn){S.modal=fn;$('#modal').hidden=false;fn()}
-function closeModal(){S.modal=null;$('#modal').hidden=true}
+function closeModal(){S.modal=null;$('#modal').hidden=true;$('#box').innerHTML=''}
 $('#modal').addEventListener('click',ev=>{if(ev.target.id=='modal'&&!S.ring)closeModal()});
 function ginfo(){const g=grp(S.cur);if(!g)return closeModal();const my=roleOf(g,S.me),mod=my!='member';
-  $('#box').innerHTML=`<h3>${esc(g.name)}</h3><div class=hint>${g.members.length} members · ${g.pub?'Public':'Private'} · invite code: <b>${g.code}</b></div>`
+  $('#box').innerHTML=`<h3>${esc(g.name)}</h3>${g.desc?`<div class=hint>${esc(g.desc)}</div>`:''}<div class=hint>${g.members.length} members · ${g.pub?'Public':'Private'} · invite code: <b>${g.code}</b></div>`
    +(my=='owner'?`<div class=row><button data-do=gpub data-v=${g.pub?0:1}>Make ${g.pub?'private':'public'}</button></div>`:'')
-   +(mod?`<form id=ga class=row><input id=gau placeholder="Add member by username"><button>Add</button></form>`:'')
+   +(mod?`<form id=gs><input id=gsn maxlength=40 value="${esc(g.name)}"><input id=gsd maxlength=200 placeholder="Description" value="${esc(g.desc||'')}"><button>Save group info</button></form>`:'')+(mod?`<form id=ga class=row><input id=gau placeholder="Add member by username"><button>Add</button></form>`:'')
    +g.members.map(u=>{const r=roleOf(g,u);return`<div class=it>${av(u)}<div class=tx><b>${esc(u)}</b><span>${r}</span></div>`
      +(my=='owner'&&u!=S.me?`<button data-do=gadm data-v="${u}|${r=='admin'?0:1}">${r=='admin'?'Demote':'Make admin'}</button>`:'')
      +(mod&&u!=S.me&&u!=g.owner&&!(r=='admin'&&my!='owner')?`<button class=red data-do=gkick data-v=${u}>Kick</button>`:'')+`</div>`}).join('')
@@ -193,20 +313,30 @@ const DO={
  edt:v=>{const m=(S.d.msgs[S.cur]||[]).find(x=>x.id==+v);if(!m)return;S.edit=+v;S.rep=0;$('#in').value=m.t;rbar();$('#in').focus()},
  rcl:()=>{if(S.edit)$('#in').value='';S.rep=S.edit=0;rbar()},
  mute:()=>{const m=muted(),i=m.indexOf(S.cur);i<0?m.push(S.cur):m.splice(i,1);localStorage['mu:'+S.me]=JSON.stringify(m);draw()},
- ept:()=>{$('#ep').hidden=!$('#ep').hidden},emo:v=>{$('#in').value+=v;$('#in').focus()},
+ ept:()=>{const e=$('#ep');e.hidden=!e.hidden;if(!e.hidden)epDraw()},ept2:v=>{S.ept=v;epDraw()},sk:v=>{const[p,i]=v.split('|'),[e,c]=SKP[+p][1][+i];sendSt('sk:'+e+'|'+c)},gif:v=>{const x=(S.gifs||[])[+v];x&&sendSt('gif:'+x.u)},gfs:()=>gifGo($('#gq').value),mys:v=>{const x=mine()[+v];x&&sendSt(x)},mrm:v=>{const m=mine();m.splice(+v,1);setMine(m);epDraw()},upl:()=>$('#sfile').click(),gurl:()=>{const u=(prompt('Paste a link to a GIF (https://…)')||'').trim();if(!/^https:\/\/[^\s<>"']{4,480}$/.test(u))return u&&toast('Link must start with https://');const m=mine().filter(x=>x!='gif:'+u);m.unshift('gif:'+u);setMine(m);epDraw()},emo:v=>{$('#in').value+=v;$('#in').focus()},
  nreq:()=>Notification.requestPermission().then(draw),
- open:v=>{S.cur=v;S.fresh=true;S.rep=S.edit=0;rbar();draw()},back:()=>{S.cur=null;draw()},
+ open:v=>{S.cur=v;S.fresh=true;S.rep=S.edit=0;rbar();$('#in').value=draft(v);draw()},back:()=>{S.cur=null;draw()},
  facc:v=>api('facc',{to:v}),fdec:v=>api('fdec',{to:v}),frem:v=>confirm('Remove friend?')&&api('frem',{to:v}),
  del:v=>api('del',{id:+v}),
  gjoin:async v=>{const r=await api('gjoin',{id:v});r.id&&DO.open(r.id)},
  gnew:()=>show(()=>{$('#box').innerHTML=`<h3>New group</h3><form id=gn><input id=gname placeholder="Group name" maxlength=40><label><input type=checkbox id=gpub> Public (anyone can find and join)</label><button class=ok>Create</button></form>`}),
- ginfo:()=>show(ginfo),
+ ginfo:()=>show(ginfo),cmenu:()=>show(cmenu),csearch:()=>show(csearch),pollnew:()=>show(pollModal),
+ fwdm:v=>{S.fw=+v;show(fwdModal)},fwdto:async v=>{closeModal();const r=await api('fwd',{id:S.fw,c:v});if(!r.err)toast('Forwarded')},
+ pinm:v=>api('pin',{c:S.cur,id:+v}),unpin:()=>api('pin',{c:S.cur,id:0}),
+ goto:v=>{closeModal();const el=document.querySelector('#msgs [data-id="'+v+'"]');if(el){el.scrollIntoView({block:'center'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1600)}},
+ cpy:v=>{const m=(S.d.msgs[S.cur]||[]).find(x=>x.id==+v);m&&navigator.clipboard&&navigator.clipboard.writeText(m.t).then(()=>toast('Copied'))},
+ vote:v=>{const[id,i]=v.split('|');api('vote',{id:+id,i:+i})},
+ cpin:()=>{const a=cps(),i=a.indexOf(S.cur);i<0?a.push(S.cur):a.splice(i,1);localStorage['cp:'+S.me]=JSON.stringify(a);draw()},
+ blk:v=>api('block',{u:other(S.cur),on:+v}),unb:v=>api('block',{u:v,on:0}),
+ clr:()=>confirm('Delete ALL messages in this chat for everyone?')&&api('clr',{c:S.cur}),
+ theme:()=>{localStorage.th=localStorage.th=='light'?'dark':'light';applyTheme()},acc:v=>{localStorage.ac=v;applyTheme()},
+ snd:()=>{localStorage.snd=localStorage.snd=='0'?'1':'0';toast('Sound '+(localStorage.snd=='0'?'off':'on'))},
+ inst:()=>{S.inst&&S.inst.prompt()},tobot:()=>{const b=$('#msgs');b.scrollTop=b.scrollHeight},
  gadm:v=>{const[u,on]=v.split('|');api('gadm',{id:grp(S.cur).id,u,on:+on})},
  gkick:v=>api('gkick',{id:grp(S.cur).id,u:v}),gpub:v=>api('gpub',{id:grp(S.cur).id,on:+v}),
  gleave:()=>confirm('Leave this group?')&&api('gleave',{id:grp(S.cur).id}).then(closeModal),
  gdel:()=>confirm('Delete the group for everyone?')&&api('gdel',{id:grp(S.cur).id}).then(closeModal),
- profile:()=>show(()=>{$('#box').innerHTML=`<h3>Accounts</h3>`+S.d.profiles.map(p=>`<div class="it ${p==S.me?'on':''}" data-do=sw data-v=${p}>${av(p)}<div class=tx><b>${esc(p)}</b></div></div>`).join('')
-   +`<form id=np class=row><input id=npn placeholder="New username (new account)"><button>Create</button></form><div class=row><button data-do=bgm>🎨 Background</button><button class=red data-do=lo>Log out</button></div>`}),
+ profile:()=>show(profileModal),
  sw:v=>{closeModal();if(C)endCall();if(A)closeGame(true);S.me=v;localStorage.me=v;S.cur=null;S.d=null;refresh()},
  lo:()=>{localStorage.removeItem('tok');location.reload()},
  bgm:()=>show(()=>{$('#box').innerHTML=`<h3>Chat background</h3><div>`+BG.map((b,i)=>`<div class=sw data-do=bg data-v=${i} style="background:${b}"></div>`).join('')+`</div><input type=file id=bgf accept="image/*">`}),
@@ -223,7 +353,11 @@ document.addEventListener('click',ev=>{const t=ev.target.closest('[data-do]');if
   const b=ev.target.closest('#tabs button');if(b){S.tab=b.dataset.t;draw();return}
   const mm=ev.target.closest('.m');if(mm&&!ev.target.closest('a')){document.querySelectorAll('.m.sel').forEach(x=>x!=mm&&x.classList.remove('sel'));mm.classList.toggle('sel')}});
 const F={af:()=>auth('login'),
- f:()=>{const i=$('#in'),t=i.value.trim();if(!t)return;i.value='';$('#ep').hidden=true;if(S.edit)api('edit',{id:S.edit,t});else api('msg',{c:S.cur,t,r:S.rep||0});S.rep=S.edit=0;rbar()},
+ pf:async()=>{const r=await api('prof',{n:$('#pfn').value,b:$('#pfb').value});if(!r.err)toast('Profile saved')},
+ pwf:async()=>{const r=await api('pw',{old:$('#pw0').value,nw:$('#pw1').value});if(!r.err){$('#pw0').value=$('#pw1').value='';toast('Password changed')}},
+ pl:async()=>{const r=await api('poll',{c:S.cur,q:$('#pq').value,o:[...document.querySelectorAll('.po-i')].map(x=>x.value),mu:$('#pmu').checked});if(!r.err)closeModal()},
+ gs:async()=>{const r=await api('gset',{id:grp(S.cur).id,name:$('#gsn').value,desc:$('#gsd').value});if(!r.err)toast('Saved')},
+ f:()=>{const i=$('#in'),t=i.value.trim();if(!t)return;i.value='';setDraft(S.cur,'');$('#ep').hidden=true;if(S.edit)api('edit',{id:S.edit,t});else api('msg',{c:S.cur,t,r:S.rep||0});S.rep=S.edit=0;rbar()},
  fa:async()=>{const r=await api('fadd',{to:$('#fu').value});if(!r.err)$('#fu').value=''},
  jc:async()=>{const r=await api('gjoin',{code:$('#jcode').value});r.id&&DO.open(r.id)},
  gn:async()=>{const r=await api('gnew',{name:$('#gname').value,pub:$('#gpub').checked});if(r.id){closeModal();DO.open(r.id)}},
@@ -233,6 +367,14 @@ const F={af:()=>auth('login'),
   if(!m)return toast('Invalid YouTube link');ytLoad(m[1]);aSend({t:'yt',a:'load',id:m[1]})},
  gf:()=>{const i=$('#gv');input(i.value);i.value=''}};
 document.addEventListener('submit',ev=>{ev.preventDefault();F[ev.target.id]?.()});
+document.addEventListener('input',e=>{if(e.target.id=='csq')csRes(e.target.value);else if(e.target.id=='in'&&S.cur&&!S.edit)setDraft(S.cur,e.target.value)});
+document.addEventListener('change',e=>{if(e.target.id=='ttl')api('ttl',{c:S.cur,s:+e.target.value})});
+document.addEventListener('click',e=>{const s=e.target.closest('.spo');if(s)s.classList.toggle('on')});
+$('#msgs').addEventListener('scroll',()=>{const b=$('#msgs');$('#dn').hidden=b.scrollHeight-b.scrollTop-b.clientHeight<200});
+document.addEventListener('keydown',e=>{
+  if(e.key=='Escape'){if(!$('#modal').hidden&&!S.ring)closeModal();else if(!$('#ep').hidden)$('#ep').hidden=true;else if(S.rep||S.edit)DO.rcl()}
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()=='k'&&S.d){e.preventDefault();S.tab='chats';draw();$('#sq').focus()}
+  else if(e.key=='ArrowUp'&&e.target.id=='in'&&!e.target.value&&S.cur&&S.d){const m=[...(S.d.msgs[S.cur]||[])].reverse().find(x=>x.f==S.me&&!x.s&&!x.poll&&!isSt(x.t));if(m){e.preventDefault();DO.edt(String(m.id))}}});
 $('#in').addEventListener('input',()=>{if(S.cur&&Date.now()-lastT>2000){lastT=Date.now();api('typing',{c:S.cur})}});
 document.addEventListener('change',ev=>{if(ev.target.id!='bgf')return;const f=ev.target.files[0];if(!f)return;const im=new Image();
   im.onload=()=>{const k=Math.min(1,1280/im.width),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
