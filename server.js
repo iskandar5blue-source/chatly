@@ -53,7 +53,10 @@ function act(L,p,b){
     const ok=m.f==p||(m.c[0]=='g'&&D.groups[m.c.slice(2)]&&role(D.groups[m.c.slice(2)],p)!='member');
     if(!ok)throw'Not allowed';D.msgs.splice(i,1);save();push(mem(m.c),{e:'sync'});return{}}
   case'typing':{const m=mem(String(b.c));if(m.includes(p))push(m.filter(x=>x!=p),{e:'typing',c:b.c,f:p});return{}}
-  case'sig':case'actv':{if(!fr(p).f.includes(b.to))throw'You are not friends';push([b.to],{e:b.a,f:p,d:b.d});return{}}
+  case'sig':{if(!fr(p).f.includes(b.to))throw'You are not friends';push([b.to],{e:'sig',f:p,d:b.d});return{}}
+  case'actv':{const c=String(b.c),m=mem(c);if(!m.includes(p))throw'No access';
+    if(c[0]=='d'&&!fr(p).f.includes(m.find(x=>x!=p)))throw'You are not friends';
+    push(m.filter(x=>x!=p),{e:'actv',f:p,c,d:b.d});return{}}
   case'fadd':{const t=nm(b.to);if(!D.profiles[t]||t==p)throw'User not found';
     const a=fr(p),o=fr(t);if(a.f.includes(t))throw'Already friends';
     if(a.i.includes(t)){a.i=a.i.filter(x=>x!=t);o.o=o.o.filter(x=>x!=p);a.f.push(t);o.f.push(p)}
