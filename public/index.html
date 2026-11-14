@@ -41,7 +41,7 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 #modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:60}
 #box{background:var(--p);padding:16px;border-radius:14px;width:min(400px,92vw);max-height:85vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
 #box form{flex-direction:column}#box form.row{flex-direction:row}
-#call{position:fixed;inset:0;background:#000;z-index:40}#rv{width:100%;height:100%;object-fit:contain}
+#call{position:fixed;inset:0;background:#000 center/cover;z-index:40}#rv{width:100%;height:100%;object-fit:contain}
 #lv{position:absolute;right:12px;top:12px;width:130px;border-radius:10px;background:#222}
 #cs{position:absolute;top:16px;left:0;right:150px;text-align:center;font-size:18px}
 #cc{position:absolute;bottom:24px;left:0;right:0;display:flex;justify-content:center;gap:14px}
@@ -56,7 +56,7 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 .bk{display:none}
 @media(max-width:700px){#app{grid-template-columns:1fr}#main{display:none}body.co #side{display:none}body.co #main{display:block}.bk{display:inline-block}}
 </style></head><body>
-<div id="auth"><h2>💬 Chatly</h2>
+<div id="auth"><h2 id="an">💬 Chatly</h2>
  <form id="af"><input id="u" placeholder="Username" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password">
  <button class="ok">Log in</button><button type="button" data-do="reg">Register</button></form></div>
 <div id="app" hidden>
@@ -69,10 +69,11 @@ form{display:flex;gap:8px;flex-wrap:wrap}
 </div>
 <div id="modal" hidden><div id="box"></div></div>
 <div id="call" hidden><video id="rv" autoplay playsinline></video><audio id="ra" autoplay></audio><video id="lv" autoplay playsinline muted></video>
- <div id="cs"></div><div id="cc"><button data-do="cmute">🎤</button><button data-do="ccam">📷</button><button data-do="cscr">🖥</button><button data-do="cend" class="red">📵</button></div></div>
+ <div id="cs"></div><div id="cc"><button data-do="cmute">🎤</button><button data-do="ccam">📷</button><button data-do="cscr">🖥</button><button data-do="cbg">🖼</button><button data-do="cend" class="red">📵</button></div></div>
 <div id="act" hidden></div><div id="toast" hidden></div>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const APP_NAME='Chatly';document.title=APP_NAME;$('#an').textContent='💬 '+APP_NAME;
 let es,C=null,A=null,Q=Promise.resolve(),lastT=0;
 const S={tab:'chats',cur:null,typing:{},d:null,token:localStorage.tok||'',me:localStorage.me||'',modal:null,ring:null};
 function toast(t){const x=$('#toast');x.textContent=t;x.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>x.hidden=true,3200)}
@@ -167,7 +168,7 @@ const DO={
  call:v=>startCall(v=='1'),cacc:acceptCall,crej:()=>{const r=S.ring;S.ring=null;closeModal();r&&sig(r.pr,{t:'rej'})},
  cmute:()=>{if(!C)return;const t=C.st.getAudioTracks()[0];if(t){t.enabled=!t.enabled;toast(t.enabled?'Mic on':'Mic muted')}},
  ccam:()=>{if(!C)return;const t=C.st.getVideoTracks()[0];if(t){t.enabled=!t.enabled;toast(t.enabled?'Camera on':'Camera off')}else toast('No camera in this call')},
- cscr:screenShare,cend:()=>endCall(true),
+ cbg:()=>{localStorage.cbg=((+localStorage.cbg||0)+1)%cbgList().length;applyCbg()},cscr:screenShare,cend:()=>endCall(true),
  acts:()=>show(()=>{$('#box').innerHTML=`<h3>Play in ${esc(nameOf(S.cur))}</h3>`+Object.keys(G).map(k=>`<button data-do=gopen data-v=${k}>${G[k].e} ${G[k].n} <small>(${G[k].min}${G[k].max>G[k].min?'–'+(G[k].max>50?'∞':G[k].max):''} players)</small></button>`).join('')}),
  gopen:v=>{closeModal();if(A)closeGame(true);openGame(v)},gj:()=>aSend({t:'join'}),
  gs:()=>{if(A&&A.host&&A.P.length>=G[A.k].min){A.ph='play';A.st=G[A.k].init(A.P);G[A.k].start&&G[A.k].start(A);bc()}},
@@ -190,11 +191,17 @@ document.addEventListener('change',ev=>{if(ev.target.id!='bgf')return;const f=ev
   im.onload=()=>{const k=Math.min(1,1280/im.width),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
     try{localStorage.bgimg=c.toDataURL('image/jpeg',.7);localStorage.bg='img';applyBg()}catch{toast('Image too large')}};im.src=URL.createObjectURL(f)});
 
+// ---------- call backgrounds ----------
+const scene=(t,m,sea,sand,gl,sun,dark)=>'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 700' preserveAspectRatio='xMidYMid slice'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${t}'/><stop offset='1' stop-color='${m}'/></linearGradient></defs><rect width='400' height='700' fill='url(#g)'/><circle cx='300' cy='250' r='34' fill='${sun}'/><rect y='330' width='400' height='115' fill='${sea}'/><path d='M0 360q50-12 100 0t100 0t100 0t100 0' stroke='#fff' stroke-opacity='.35' fill='none'/><rect y='440' width='400' height='260' fill='${sand}'/><rect x='70' y='308' width='170' height='66' fill='#f4f4f4'/><rect x='55' y='300' width='200' height='9' fill='#333'/><rect x='40' y='372' width='270' height='72' fill='#fff'/><rect x='30' y='364' width='290' height='9' fill='#333'/><rect x='85' y='318' width='110' height='46' fill='${gl}'/><rect x='55' y='384' width='160' height='52' fill='${gl}'/><rect x='230' y='384' width='60' height='52' fill='#8a5a2b'/><rect x='20' y='444' width='320' height='12' fill='#a9743f'/><rect x='40' y='500' width='200' height='70' rx='14' fill='#4fc3e8'/><path d='M360 560Q350 440 372 330' stroke='#6b4a2b' stroke-width='7' fill='none'/><g fill='#2e8b57'><ellipse cx='345' cy='330' rx='34' ry='9' transform='rotate(-25 345 330)'/><ellipse cx='400' cy='330' rx='34' ry='9' transform='rotate(25 400 330)'/><ellipse cx='372' cy='318' rx='30' ry='9'/></g>${dark?"<rect width='400' height='700' fill='#06102a' fill-opacity='.35'/>":''}</svg>`);
+const CBGS=[scene('#6dd5fa','#ffffff','#2193b0','#f5e3b3','#9fd3ea','#fff7b0'),scene('#ffb27a','#bfe6f5','#3fa9d6','#f1dfb8','#7fb8d6','#fff3c4'),scene('#1a2a6c','#4b3f72','#1b2f5a','#6b5d54','#ffd36b','#fdfdf0',1)];
+const cbgList=()=>{const l=CBGS.map(s=>`url("${s}")`);if(localStorage.bgimg)l.push(`url("${localStorage.bgimg}")`);l.push('#000');return l};
+function applyCbg(){const l=cbgList();$('#call').style.background=l[(+localStorage.cbg||0)%l.length]+' center/cover no-repeat'}
+
 // ---------- calls (WebRTC, 1-to-1) ----------
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const sig=(to,d)=>api('sig',{to,d});
 async function media(video){try{return await navigator.mediaDevices.getUserMedia({audio:true,video})}catch{toast('Camera/microphone unavailable (needs HTTPS and permission)');return null}}
-function showCall(t){$('#call').hidden=false;$('#cs').textContent=t;$('#lv').srcObject=C.st}
+function showCall(t){applyCbg();$('#call').hidden=false;$('#cs').textContent=t;$('#lv').srcObject=C.st}
 async function startCall(video){if(C||S.cur?.[0]!='d')return;const peer=other(S.cur),st=await media(video);if(!st)return;
   C={peer,st,pc:null,ready:false};showCall('Calling '+peer+'…');sig(peer,{t:'ring',video})}
 async function acceptCall(){const r=S.ring;S.ring=null;closeModal();if(!r||C)return;const st=await media(r.video);
