@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#17212b"><link rel="apple-touch-icon" href="/icon-192.png"><title>Chatly</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2337b6ff'/%3E%3Cstop offset='1' stop-color='%237b4dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(%23g)'/%3E%3Cpath d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='%23fff' fill-opacity='.18'/%3E%3Ctext x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='%23fff' font-family='Arial,Helvetica,sans-serif'%3EC%3C/text%3E%3C/svg%3E">
-<style>
+<script>try{localStorage.tok&&localStorage.me&&document.documentElement.classList.add('has')}catch(e){}</script><style>
 :root{--bg:#0e1621;--p:#17212b;--p2:#202b36;--ac:#2b95e6;--t:#e8eef4;--m:#7f91a4;--mine:#2b5278;--line:#0b121a}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;height:100dvh;font:14px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--t)}
@@ -89,10 +89,64 @@ select{background:var(--p2);color:var(--t);border:1px solid #2a3948;border-radiu
 #nb{padding:8px 12px;background:#1e3a52;display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:8px}
 .bk{display:none}
 @media(max-width:700px){#app{grid-template-columns:1fr}#main{display:none}body.co #side{display:none}body.co #main{display:block}.bk{display:inline-block}}
+
+/* ---- smoothness ---- */
+*{scrollbar-width:thin;scrollbar-color:#2a3948 transparent}
+button,.it,.sw,.po,.rx b{transition:background-color .15s,transform .12s,box-shadow .2s,opacity .2s,border-color .2s}
+button:active{transform:scale(.96)}.it:active{transform:scale(.99)}
+#modal:not([hidden]){animation:fd .18s ease}#modal:not([hidden]) #box{animation:pp .24s cubic-bezier(.2,.9,.3,1.15)}
+#act:not([hidden]),#ep:not([hidden]){animation:pp .22s ease}#toast:not([hidden]){animation:tt .25s ease}#call:not([hidden]){animation:fd .25s}
+@keyframes fd{from{opacity:0}}@keyframes pp{from{opacity:0;transform:translateY(10px) scale(.97)}}@keyframes tt{from{opacity:0;transform:translate(-50%,10px)}}
+.m.in{animation:mi .22s ease}@keyframes mi{from{opacity:0;transform:translateY(8px) scale(.97)}}
+#chat.swap{animation:fd .2s ease}
+/* ---- landing ---- */
+.has #land{display:none}
+#land{position:fixed;inset:0;overflow:auto;z-index:30;background:radial-gradient(1100px 560px at 15% -10%,#1d4f7a66,transparent),radial-gradient(900px 520px at 95% 5%,#7b4dff44,transparent),#0b121a;scroll-behavior:smooth}
+.ln,.hero,.fts,.ft{max-width:1080px;margin:0 auto;padding-left:20px;padding-right:20px}
+.ln{display:flex;align-items:center;gap:10px;padding-top:18px;padding-bottom:6px}.ln .lg{width:34px;height:34px}.ln b{font-size:20px}.ln .sp{flex:1}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding-top:44px;padding-bottom:30px}
+.hero h1{font-size:clamp(34px,5.4vw,58px);line-height:1.05;margin:0 0 16px;letter-spacing:-1px}
+.grad{background:linear-gradient(90deg,#37b6ff,#9b6bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:#9fb1c3;font-size:17px;max-width:520px;margin:0 0 22px}
+.btn{padding:13px 22px;border-radius:12px;font-weight:600;font-size:15px}.btn:hover{transform:translateY(-2px)}
+.btn.pri{background:linear-gradient(135deg,#2b95e6,#7b4dff);box-shadow:0 8px 24px #2b95e655}
+.dl{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.dl button{background:#ffffff0f;border:1px solid #ffffff1a;padding:11px 16px;border-radius:12px}.dl button:hover{background:#ffffff1c;transform:translateY(-2px)}.dl button.mine{border-color:#2b95e6;background:#2b95e622}
+.dn{color:#7f91a4;font-size:12px;margin-top:10px}
+.mock{background:#17212bcc;border:1px solid #ffffff14;border-radius:22px;padding:16px;box-shadow:0 20px 60px #0008;animation:fl 6s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-8px)}}
+.mock .b{max-width:78%;padding:8px 12px;border-radius:14px;margin:8px 0;background:#202b36;font-size:14px}.mock .b.me{margin-left:auto;background:#2b5278}
+.mock .hd{display:flex;gap:8px;align-items:center;padding-bottom:8px;border-bottom:1px solid #ffffff12;color:#9fb1c3;font-size:13px}.mock .hd i{width:10px;height:10px;border-radius:50%;background:#4cd964}
+.fts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;padding-top:30px;padding-bottom:30px}
+.fc{background:#17212b99;border:1px solid #ffffff10;border-radius:16px;padding:18px;transition:transform .25s,border-color .25s,background .25s}.fc:hover{transform:translateY(-4px);border-color:#2b95e655;background:#17212b}
+.fc em{font-style:normal;font-size:26px;display:block;margin-bottom:8px}.fc b{display:block;margin-bottom:4px}.fc span{color:#9fb1c3;font-size:13px}
+.ft{text-align:center;color:#7f91a4;padding-top:30px;padding-bottom:50px;font-size:13px}.ft h2{color:var(--t);font-size:28px;margin:0 0 6px}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}.rv.show{opacity:1;transform:none}
+.stp{margin:6px 0 6px 18px;padding:0;color:#c9d6e2;line-height:1.55}.stp li{margin:5px 0}
+@media(max-width:800px){.hero{grid-template-columns:1fr}.mock{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.rv{opacity:1;transform:none}}
 </style></head><body>
-<div id="auth"><div class="logo"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='lg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#37b6ff'/><stop offset='1' stop-color='#7b4dff'/></linearGradient></defs><path d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(#lg)'/><path d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='#fff' fill-opacity='.18'/><text x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='#fff' font-family='Arial,Helvetica,sans-serif'>C</text></svg><h2 id="an">Chatly</h2></div>
+<div id="land">
+ <nav class="ln"><svg class="lg" xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='lg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#37b6ff'/><stop offset='1' stop-color='#7b4dff'/></linearGradient></defs><path d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(#lg)'/><path d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='#fff' fill-opacity='.18'/><text x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='#fff' font-family='Arial,Helvetica,sans-serif'>C</text></svg><b class="an2"></b><span class="sp"></span><button data-land="auth">Log in</button><button class="btn pri" data-land="auth">Use website</button></nav>
+ <section class="hero"><div class="rv"><h1>Chat, call and play <span class="grad">in one place</span></h1>
+  <p>Private chats, groups, voice and video calls with screen sharing, stickers, GIFs, polls and games with friends. Fast, clean and free.</p>
+  <button class="btn pri" data-land="auth">Use website</button>
+  <div class="dl" id="dl"><button data-os="win">⊞ Download for Windows</button><button data-os="mac">🍎 Download for macOS</button><button data-os="lin">🐧 Download for Linux</button></div>
+  <div class="dn">Installs as an app straight from your browser, no installer file needed. On a phone, use “Use website” and add it to your home screen.</div></div>
+  <div class="mock rv"><div class="hd"><i></i> Aziza · online</div><div class="b">Salom! Bugun o’ynaymizmi? 🎮</div><div class="b me">Ha, qo’ng’iroq qilaman 📞</div><div class="b">🔥 Zo’r! GIF yuboraymi?</div><div class="b me">Yuboring 😂 <span style="color:#9fb1c3;font-size:11px">✓✓</span></div></div></section>
+ <section class="fts">
+  <div class="fc rv"><em>💬</em><b>Chats and groups</b><span>Friends, public or private groups, owner and admin roles, any size.</span></div>
+  <div class="fc rv"><em>📞</em><b>Voice and video calls</b><span>One-to-one calls with screen sharing and call backgrounds.</span></div>
+  <div class="fc rv"><em>🏷</em><b>Stickers and GIFs</b><span>15 sticker packs, GIF search, your own images and GIFs.</span></div>
+  <div class="fc rv"><em>🎮</em><b>Games and watch together</b><span>12 games plus synced YouTube watching with friends.</span></div>
+  <div class="fc rv"><em>📊</em><b>Polls, replies, reactions</b><span>Edit, forward, pin, mentions, spoilers and formatted text.</span></div>
+  <div class="fc rv"><em>🔔</em><b>Notifications</b><span>Unread counters, sounds, mute and auto-delete timers.</span></div>
+ </section>
+ <section class="ft rv"><h2>Ready to start?</h2><p>Create a free account in a few seconds.</p><button class="btn pri" data-land="auth">Use website</button></section>
+</div>
+<div id="auth" hidden><div class="logo"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='lg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#37b6ff'/><stop offset='1' stop-color='#7b4dff'/></linearGradient></defs><path d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(#lg)'/><path d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='#fff' fill-opacity='.18'/><text x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='#fff' font-family='Arial,Helvetica,sans-serif'>C</text></svg><h2 id="an">Chatly</h2></div>
  <form id="af"><input id="u" placeholder="Username" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password">
- <button class="ok">Log in</button><button type="button" data-do="reg">Register</button></form></div>
+ <button class="ok">Log in</button><button type="button" data-do="reg">Register</button></form><button type="button" data-land="back" style="margin-top:12px;background:none;color:var(--m);width:100%">← Back</button></div>
 <div id="app" hidden>
  <aside id="side"><div id="me" data-do="profile"></div>
   <div id="tabs"><button data-t="chats">Chats</button><button data-t="friends">Friends</button><button data-t="groups">Groups</button></div>
@@ -128,7 +182,7 @@ const focusIn=el=>{const a=document.activeElement;return a&&a.tagName=='INPUT'&&
 // ---------- auth / connection ----------
 async function auth(a){const r=await api(a,{u:$('#u').value,pw:$('#pw').value});if(r.err||!r.token)return;
   S.token=r.token;localStorage.tok=r.token;S.me=r.profiles.includes(localStorage.me)?localStorage.me:r.profiles[0];start()}
-function start(){$('#auth').hidden=true;$('#app').hidden=false;localStorage.me=S.me;connect();refresh()}
+function start(){$('#land').hidden=true;$('#auth').hidden=true;$('#app').hidden=false;localStorage.me=S.me;connect();refresh()}
 function connect(){es&&es.close();es=new EventSource('/events?token='+S.token);
   es.onmessage=m=>{const v=JSON.parse(m.data);if(!v.for.includes(S.me))return;
     if(v.e=='sync')refresh();else if(v.e=='typing'){S.typing[v.c+'|'+v.f]=Date.now();drawChat();if(S.tab=='chats'&&!focusIn($('#list')))drawList()}
@@ -294,7 +348,7 @@ function drawChat(){if(!S.d)return;
   const mod=g&&roleOf(g,S.me)!='member';
   let pd='';box.innerHTML=(S.d.msgs[c]||[]).map(m=>{const dd=new Date(m.ts).toDateString();let x='';if(dd!=pd){pd=dd;x=`<div class=sys>${dayLbl(m.ts)}</div>`}return x+mh(m,c,g,mod)}).join('')
     +(ty.length?'<div class="m ty2"><i></i><i></i><i></i></div>':'');
-  if(at)box.scrollTop=box.scrollHeight;applyBg()}
+  if(at)box.scrollTop=box.scrollHeight;applyBg();animNew(c)}
 const BG=['linear-gradient(135deg,#0f2027,#203a43,#2c5364)','linear-gradient(135deg,#42275a,#734b6d)','linear-gradient(135deg,#134e5e,#71b280)','linear-gradient(160deg,#232526,#414345)'];
 function applyBg(){const b=localStorage.bg||'0';$('#msgs').style.background=b=='img'&&localStorage.bgimg?`center/cover url("${localStorage.bgimg}")`:BG[+b||0]}
 
@@ -337,7 +391,7 @@ const DO={
  clr:()=>confirm('Delete ALL messages in this chat for everyone?')&&api('clr',{c:S.cur}),
  theme:()=>{localStorage.th=localStorage.th=='light'?'dark':'light';applyTheme()},acc:v=>{localStorage.ac=v;applyTheme()},
  snd:()=>{localStorage.snd=localStorage.snd=='0'?'1':'0';toast('Sound '+(localStorage.snd=='0'?'off':'on'))},
- inst:()=>{S.inst&&S.inst.prompt()},tobot:()=>{const b=$('#msgs');b.scrollTop=b.scrollHeight},
+ inst:()=>{S.inst&&S.inst.prompt()},tobot:()=>{const b=$('#msgs');b.scrollTo({top:b.scrollHeight,behavior:'smooth'})},
  gadm:v=>{const[u,on]=v.split('|');api('gadm',{id:grp(S.cur).id,u,on:+on})},
  gkick:v=>api('gkick',{id:grp(S.cur).id,u:v}),gpub:v=>api('gpub',{id:grp(S.cur).id,on:+v}),
  gleave:()=>confirm('Leave this group?')&&api('gleave',{id:grp(S.cur).id}).then(closeModal),
@@ -550,6 +604,31 @@ async function ytLoad(id,remote){await ytAPI();if(!A||A.k!='yt')return;if(remote
   if(A.pl&&A.pl.loadVideoById)A.pl.loadVideoById(id);else if(!A.pl)A.pl=new YT.Player('yp',{width:'100%',height:240,videoId:id,playerVars:{playsinline:1},events:{onStateChange:ytState}})}
 function ytState(x){if(!A||A.quiet)return;if(x.data==1)aSend({t:'yt',a:'play',ts:A.pl.getCurrentTime()});else if(x.data==2)aSend({t:'yt',a:'pause',ts:A.pl.getCurrentTime()})}
 function ytRemote(d){if(d.a=='load')return ytLoad(d.id,true);if(A.pl&&A.pl.seekTo){A.quiet=true;A.pl.seekTo(d.ts,true);d.a=='play'?A.pl.playVideo():A.pl.pauseVideo();setTimeout(()=>A&&(A.quiet=false),800)}}
+
+// ---------- smooth new-message animation ----------
+function animNew(c){const els=[...document.querySelectorAll('#msgs .m[data-id]')],sh=S.shown||(S.shown={}),prev=sh[c];
+  if(prev&&S.shownCur==c)els.forEach(e=>{if(!prev.has(e.dataset.id))e.classList.add('in')});
+  else{const ch=$('#chat');ch.classList.remove('swap');void ch.offsetWidth;ch.classList.add('swap')}
+  sh[c]=new Set(els.map(e=>e.dataset.id));S.shownCur=c}
+// ---------- landing page ----------
+(function(){const ua=navigator.userAgent,os=/Android/i.test(ua)?'and':/iPhone|iPad|iPod/i.test(ua)?'ios':/Windows/i.test(ua)?'win':/Mac/i.test(ua)?'mac':/Linux|X11|CrOS/i.test(ua)?'lin':'win';
+  document.querySelectorAll('.an2').forEach(e=>e.textContent=APP_NAME);
+  document.querySelectorAll('#land [data-os]').forEach(b=>b.classList.toggle('mine',b.dataset.os==os));
+  const T={win:['Windows','Open this site in Chrome or Edge.','Click the install icon (small screen with a down arrow) at the right end of the address bar, or open the ⋮ menu and choose “Install”. In Edge: ⋯ → Apps → Install this site as an app.','The app opens in its own window and appears in the Start menu.'],
+   mac:['macOS','Open this site in Chrome or Edge and click the install icon in the address bar, then Install.','In Safari 17 or newer use File → Add to Dock instead.','The app appears in Launchpad and the Dock.'],
+   lin:['Linux','Open this site in Chrome, Chromium or Edge (Firefox on desktop cannot install web apps).','Click the install icon in the address bar, or open ⋮ → “Install”.','The app appears in your application launcher.'],
+   and:['Android','Open this site in Chrome.','Tap ⋮ → Install app (or Add to Home screen).','Open it from your home screen like any app.'],
+   ios:['iPhone / iPad','Open this site in Safari.','Tap Share → Add to Home Screen.','Open it from your home screen like any app.']};
+  function how(k){const t=T[k];show(()=>{$('#box').innerHTML=`<h3>Install on ${t[0]}</h3><ol class=stp><li>${t[1]}</li><li>${t[2]}</li><li>${t[3]}</li></ol>`
+    +(S.inst&&k==os?'<button class=ok data-land="go">⬇ Install now</button>':'<div class=hint>Tip: if you do not see the install option, make sure you are on the https:// address of this site.</div>')
+    +'<button data-land="close">Close</button>'})}
+  document.addEventListener('click',e=>{const o=e.target.closest('#land [data-os]');if(o)return how(o.dataset.os);
+    const t=e.target.closest('[data-land]');if(!t)return;const a=t.dataset.land;
+    if(a=='auth'){$('#land').hidden=true;$('#auth').hidden=false;$('#u').focus()}
+    else if(a=='back'){$('#auth').hidden=true;$('#land').hidden=false}
+    else if(a=='go'){S.inst&&S.inst.prompt();closeModal()}else if(a=='close')closeModal()});
+  if('IntersectionObserver' in window){const io=new IntersectionObserver(r=>r.forEach(x=>{if(x.isIntersecting){x.target.classList.add('show');io.unobserve(x.target)}}),{threshold:.12});
+    document.querySelectorAll('.rv').forEach((e,i)=>{e.style.transitionDelay=(i%4)*70+'ms';io.observe(e)})}else document.querySelectorAll('.rv').forEach(e=>e.classList.add('show'))})();
 
 if(S.token&&S.me)start();
 </script></body></html>
