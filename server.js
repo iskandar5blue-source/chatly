@@ -113,4 +113,4 @@ http.createServer((q,s)=>{
   fs.readFile(path.join(__dirname,'public','index.html'),(e,h)=>{
     if(e){s.writeHead(404);return s.end('public/index.html not found')}
     s.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});s.end(h)})
-}).listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Chatly running at http://localhost:'+(process.env.PORT||3000)));
+}).listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Chat server running at http://localhost:'+(process.env.PORT||3000)));
