@@ -1,10 +1,16 @@
 const http=require('http'),fs=require('fs'),path=require('path'),cr=require('crypto');
-const FILE=path.join(__dirname,'data2.json');
-let D={logins:{},profiles:{},tokens:{},friends:{},groups:{},msgs:[],n:1};
-try{D=Object.assign(D,JSON.parse(fs.readFileSync(FILE,'utf8')))}catch{}
-let dirty=false;const save=()=>{dirty=true};
-setInterval(()=>{if(dirty){dirty=false;fs.writeFile(FILE,JSON.stringify(D),()=>{})}},1000);
+const FILE=path.join(__dirname,'data2.json'),RU=(process.env.UPSTASH_REDIS_REST_URL||'').replace(/\/$/,''),RT=process.env.UPSTASH_REDIS_REST_TOKEN||'',LIM=RU?4000:30000;
+let D={logins:{},profiles:{},tokens:{},friends:{},groups:{},msgs:[],reads:{},n:1};
+if(!RU)try{D=Object.assign(D,JSON.parse(fs.readFileSync(FILE,'utf8')))}catch{}
+let dirty=false,busy=false;const save=()=>{dirty=true};
+async function flush(){if(!dirty||busy)return;dirty=false;busy=true;const s=JSON.stringify(D);
+  try{if(RU){const r=await fetch(RU,{method:'POST',headers:{Authorization:'Bearer '+RT},body:JSON.stringify(['SET','byrex',s])});if(!r.ok)throw new Error('save failed '+r.status)}else fs.writeFileSync(FILE,s)}
+  catch(e){console.error(e.message);dirty=true}busy=false}
+setInterval(flush,RU?4000:1000);
+for(const sg of['SIGTERM','SIGINT'])process.on(sg,async()=>{busy=false;await flush();process.exit(0)});
 const streams={};
+const isOn=p=>{const o=D.profiles[p];return!!(streams[o]&&streams[o].size)};
+const pres=L=>{const ps=(D.logins[L]||{profiles:[]}).profiles;push(ps.flatMap(p=>fr(p).f),{e:'sync'})};
 const push=(ps,ev)=>{ps=[...new Set(ps)];ev.for=ps;const s='data: '+JSON.stringify(ev)+'\n\n';
   for(const o of new Set(ps.map(p=>D.profiles[p])))for(const r of streams[o]||[])r.write(s)};
 const fr=p=>D.friends[p]||(D.friends[p]={f:[],i:[],o:[]});
@@ -15,7 +21,7 @@ const role=(g,p)=>g.owner==p?'owner':g.admins.includes(p)?'admin':'member';
 const hash=(pw,salt)=>cr.scryptSync(pw,salt,32).toString('hex');
 const nm=s=>String(s||'').trim().toLowerCase();
 const okName=s=>/^[a-z0-9_]{3,20}$/.test(s);
-const mkTok=l=>{const t=cr.randomBytes(24).toString('hex');D.tokens[t]=l;save();return t};
+const mkTok=l=>{const t=cr.randomBytes(24).toString('hex');D.tokens[t]=l;const mine=Object.keys(D.tokens).filter(k=>D.tokens[k]==l);while(mine.length>5)delete D.tokens[mine.shift()];save();return t};
 const rm=(g,all)=>{delete D.groups[g.id];D.msgs=D.msgs.filter(m=>m.c!='g:'+g.id);save();push(all,{e:'sync'});return{}};
 
 function reg(b){const u=nm(b.u),pw=String(b.pw||'');
@@ -34,7 +40,9 @@ function sync(p,L){const f=fr(p);
   const msgs={};for(const id of ids)msgs[id]=[];
   for(const m of D.msgs)if(ids.has(m.c))msgs[m.c].push(m);
   for(const k in msgs)msgs[k]=msgs[k].slice(-200);
-  return{me:p,profiles:D.logins[L].profiles,friends:f,groups:gs,msgs,
+  const rd={},pr={};
+  for(const id of ids){rd[id]=D.reads[id+'#'+p]||0;if(id[0]=='d'){const o=mem(id).find(x=>x!=p);pr[id]=D.reads[id+'#'+o]||0}}
+  return{me:p,profiles:D.logins[L].profiles,friends:f,groups:gs,msgs,rd,pr,on:f.f.filter(isOn),
     pub:Object.values(D.groups).filter(g=>g.pub&&!g.members.includes(p)).slice(0,50).map(g=>({id:g.id,name:g.name,n:g.members.length}))}}
 
 function act(L,p,b){
@@ -47,11 +55,20 @@ function act(L,p,b){
   case'msg':{const t=String(b.t||'').trim().slice(0,2000),m=mem(String(b.c));
     if(!t||!m.includes(p))throw'Cannot send';
     if(b.c[0]=='d'&&!fr(p).f.includes(m.find(x=>x!=p)))throw'You are not friends';
-    D.msgs.push({id:D.n++,c:b.c,f:p,t,ts:Date.now()});if(D.msgs.length>30000)D.msgs.splice(0,5000);
+    const rp=b.r?D.msgs.find(x=>x.id==b.r&&x.c==b.c):null;
+    D.msgs.push({id:D.n++,c:b.c,f:p,t,ts:Date.now(),...(rp?{r:rp.id}:{})});if(D.msgs.length>LIM)D.msgs.splice(0,500);
     save();push(m,{e:'sync'});return{}}
   case'del':{const i=D.msgs.findIndex(x=>x.id==b.id),m=D.msgs[i];if(!m)return{};
     const ok=m.f==p||(m.c[0]=='g'&&D.groups[m.c.slice(2)]&&role(D.groups[m.c.slice(2)],p)!='member');
     if(!ok)throw'Not allowed';D.msgs.splice(i,1);save();push(mem(m.c),{e:'sync'});return{}}
+  case'edit':{const m=D.msgs.find(x=>x.id==b.id),t=String(b.t||'').trim().slice(0,2000);
+    if(!m||m.s||m.f!=p||!t)throw'Not allowed';if(m.t!=t){m.t=t;m.e=1;save();push(mem(m.c),{e:'sync'})}return{}}
+  case'react':{const m=D.msgs.find(x=>x.id==b.id),e=String(b.emo||'');
+    if(!m||m.s||!mem(m.c).includes(p)||!['👍','❤️','😂','🔥','😮','😢'].includes(e))throw'Not allowed';
+    m.rx=m.rx||{};const a=m.rx[e]=m.rx[e]||[],i=a.indexOf(p);if(i<0)a.push(p);else a.splice(i,1);
+    if(!a.length)delete m.rx[e];if(!Object.keys(m.rx).length)delete m.rx;save();push(mem(m.c),{e:'sync'});return{}}
+  case'read':{const c=String(b.c),m=mem(c),id=+b.id||0;if(!m.includes(p))throw'No access';const k=c+'#'+p;
+    if(id>(D.reads[k]||0)){D.reads[k]=id;save();push(m.filter(x=>x!=p),{e:'rd',c,f:p,id})}return{}}
   case'typing':{const m=mem(String(b.c));if(m.includes(p))push(m.filter(x=>x!=p),{e:'typing',c:b.c,f:p});return{}}
   case'sig':{if(!fr(p).f.includes(b.to))throw'You are not friends';push([b.to],{e:'sig',f:p,d:b.d});return{}}
   case'actv':{const c=String(b.c),m=mem(c);if(!m.includes(p))throw'No access';
@@ -92,14 +109,14 @@ function act(L,p,b){
   }
   throw'Unknown action'}
 
-http.createServer((q,s)=>{
+const srv=http.createServer((q,s)=>{
   const u=new URL(q.url,'http://x');
   if(u.pathname=='/events'){const L=D.tokens[u.searchParams.get('token')];
     if(!L){s.writeHead(401);return s.end()}
     s.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-cache',Connection:'keep-alive','X-Accel-Buffering':'no'});
-    s.write(': ok\n\n');(streams[L]=streams[L]||new Set()).add(s);
+    s.write(': ok\n\n');(streams[L]=streams[L]||new Set()).add(s);pres(L);
     const k=setInterval(()=>s.write(': ping\n\n'),20000);
-    q.on('close',()=>{clearInterval(k);streams[L].delete(s)});return}
+    q.on('close',()=>{clearInterval(k);streams[L].delete(s);pres(L)});return}
   if(q.method=='POST'&&u.pathname=='/api'){let d='';
     q.on('data',c=>{d+=c;if(d.length>2e5)q.destroy()});
     q.on('end',()=>{let r;
@@ -113,4 +130,9 @@ http.createServer((q,s)=>{
   fs.readFile(path.join(__dirname,'public','index.html'),(e,h)=>{
     if(e){s.writeHead(404);return s.end('public/index.html not found')}
     s.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});s.end(h)})
-}).listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Chat server running at http://localhost:'+(process.env.PORT||3000)));
+});
+(async()=>{
+  if(RU){try{const r=await fetch(RU+'/get/byrex',{headers:{Authorization:'Bearer '+RT}}),j=await r.json();if(j.result)D=Object.assign(D,JSON.parse(j.result));console.log('Loaded data from Upstash')}
+    catch(e){console.error('Cannot load data:',e.message);process.exit(1)}}
+  srv.listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Chat server running on port '+(process.env.PORT||3000)));
+})();
