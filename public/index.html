@@ -125,6 +125,43 @@ button:active{transform:scale(.96)}.it:active{transform:scale(.99)}
 .stp{margin:6px 0 6px 18px;padding:0;color:#c9d6e2;line-height:1.55}.stp li{margin:5px 0}
 @media(max-width:800px){.hero{grid-template-columns:1fr}.mock{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.rv{opacity:1;transform:none}}
+#lb{position:fixed;inset:0;background:#000d;z-index:80;display:grid;place-items:center;cursor:zoom-out;animation:fd .2s}#lb img{max-width:94vw;max-height:90vh;border-radius:12px;box-shadow:0 10px 40px #000}
+.m .sti:not(.sm){cursor:zoom-in;transition:transform .2s}.m .sti:not(.sm):hover{transform:scale(1.02)}#chat.dz #msgs{outline:2px dashed var(--ac);outline-offset:-8px}
+
+/* ---- v4 polish ---- */
+#auth{position:fixed;inset:0;max-width:none;margin:0;border-radius:0;padding:20px;display:flex;align-items:center;justify-content:center;overflow:auto;z-index:31;
+ background:radial-gradient(900px 520px at 15% 0,#1d4f7a66,transparent),radial-gradient(800px 500px at 95% 100%,#7b4dff44,transparent),#0b121a}
+#auth:not([hidden]){animation:fd .3s}
+.ac{width:min(390px,100%);background:#17212bd9;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid #ffffff14;border-radius:24px;padding:30px 28px;box-shadow:0 28px 80px #000a;animation:pp .4s cubic-bezier(.2,.9,.3,1.1)}
+.ac .logo{margin-bottom:6px}.ac .logo h2{margin:0;font-size:28px}.sub{text-align:center;color:var(--m);margin:0 0 18px}
+#auth form{gap:12px}#auth input:not([type=checkbox]){padding:14px 15px;border-radius:13px;background:#0e1621;border-color:#ffffff14;width:100%;transition:border-color .2s,box-shadow .2s}
+#auth input:focus{box-shadow:0 0 0 4px #2b95e62b}
+.pwr{position:relative;display:flex}.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;padding:6px 9px}.eye:hover{background:#ffffff12}.eye:active{transform:translateY(-50%) scale(.92)}
+#auth .ok{padding:13px;border-radius:13px;font-weight:600;background:linear-gradient(135deg,#2b95e6,#7b4dff);box-shadow:0 8px 22px #2b95e640}#auth .ok:hover{box-shadow:0 10px 28px #2b95e66a;transform:translateY(-1px)}
+.ghost{padding:12px;border-radius:13px;background:none;border:1px solid #ffffff22}.ghost:hover{background:#ffffff10;border-color:#ffffff3a}
+.hint2{text-align:center;font-size:12px;color:#6f8296}
+button{position:relative;overflow:hidden}.rp{position:absolute;border-radius:50%;background:#ffffff3d;transform:scale(0);animation:rp .6s ease-out forwards;pointer-events:none}@keyframes rp{to{transform:scale(1);opacity:0}}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #6ab3f3;outline-offset:2px}
+#app:not([hidden]){animation:fd .4s ease}
+body:not(.lt) #side{background:linear-gradient(180deg,#17212b,#131c26)}
+#hd{position:relative;z-index:2;box-shadow:0 6px 18px #0003}#me{border-bottom:1px solid #ffffff0a}#me:hover{background:#ffffff08}
+.it{position:relative;border-radius:12px}.it.on{background:linear-gradient(90deg,#2b95e633,#2b95e610)}.it.on::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:3px;border-radius:3px;background:var(--ac)}
+.av{box-shadow:0 2px 8px #0005}
+.m{border-radius:16px;box-shadow:0 1px 2px #0003}.m.me{border-bottom-right-radius:5px;background:linear-gradient(135deg,#2b5278,#2b6598)}.m:not(.me):not(.stk):not(.ty2){border-bottom-left-radius:5px}.m.stk{box-shadow:none}
+#f{box-shadow:0 -6px 18px #0003;align-items:center}#f #in{border-radius:22px;padding:11px 16px}#f #in:focus{box-shadow:0 0 0 3px #2b95e633}
+#f>button:last-child{border-radius:50%;width:42px;height:42px;padding:0;background:linear-gradient(135deg,#2b95e6,#7b4dff);flex:none}#f>button:last-child:hover{filter:brightness(1.12)}
+#f>button:not(:last-child){background:none;font-size:18px;padding:8px 9px;border-radius:50%}#f>button:not(:last-child):hover{background:#ffffff12}
+#box{border-radius:20px;box-shadow:0 28px 70px #000a;border:1px solid #ffffff12}#act{border:1px solid #ffffff12}
+input:focus{box-shadow:0 0 0 3px #2b95e62b}
+#land .ln{position:sticky;top:0;z-index:6;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);background:#0b121acc;max-width:none;padding-left:max(20px,calc((100% - 1040px)/2));padding-right:max(20px,calc((100% - 1040px)/2))}
+.how,.faq{max-width:1080px;margin:0 auto;padding:30px 20px}.how h2,.faq h2{font-size:28px;margin:0 0 16px;text-align:center}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.st{background:#17212b99;border:1px solid #ffffff10;border-radius:16px;padding:20px;transition:transform .25s,border-color .25s}.st:hover{transform:translateY(-4px);border-color:#7b4dff66}
+.st i{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2b95e6,#7b4dff);font-style:normal;font-weight:700;margin-bottom:10px}.st b{display:block;margin-bottom:4px}.st span{color:#9fb1c3;font-size:13px}
+.faq{max-width:760px}.faq details{background:#17212b99;border:1px solid #ffffff10;border-radius:14px;margin:8px 0;padding:14px 18px;transition:border-color .2s,background .2s}.faq details[open]{border-color:#2b95e655;background:#17212b}
+.faq summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between}.faq summary::after{content:'+';color:var(--ac);font-size:20px;line-height:1;transition:transform .25s}.faq details[open] summary::after{transform:rotate(45deg)}
+.faq p{color:#9fb1c3;margin:10px 0 0}.cp{margin-top:34px;font-size:12px}
+.orb{position:absolute}
 </style></head><body>
 <div id="land">
  <nav class="ln"><svg class="lg" xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='lg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#37b6ff'/><stop offset='1' stop-color='#7b4dff'/></linearGradient></defs><path d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(#lg)'/><path d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='#fff' fill-opacity='.18'/><text x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='#fff' font-family='Arial,Helvetica,sans-serif'>C</text></svg><b class="an2"></b><span class="sp"></span><button data-land="auth">Log in</button><button class="btn pri" data-land="auth">Use website</button></nav>
@@ -142,11 +179,21 @@ button:active{transform:scale(.96)}.it:active{transform:scale(.99)}
   <div class="fc rv"><em>📊</em><b>Polls, replies, reactions</b><span>Edit, forward, pin, mentions, spoilers and formatted text.</span></div>
   <div class="fc rv"><em>🔔</em><b>Notifications</b><span>Unread counters, sounds, mute and auto-delete timers.</span></div>
  </section>
- <section class="ft rv"><h2>Ready to start?</h2><p>Create a free account in a few seconds.</p><button class="btn pri" data-land="auth">Use website</button></section>
+ <section class="how"><h2 class="rv">How it works</h2><div class="steps">
+  <div class="st rv"><i>1</i><b>Create an account</b><span>Pick a username and password. You can add more accounts under one login.</span></div>
+  <div class="st rv"><i>2</i><b>Add friends</b><span>Send a request by username, or join a public group or a private one with a code.</span></div>
+  <div class="st rv"><i>3</i><b>Talk and play</b><span>Message, call, share your screen, send stickers and start a game together.</span></div></div></section>
+ <section class="faq"><h2 class="rv">Questions</h2>
+  <details class="rv"><summary>Is it free?</summary><p>Yes. Creating an account and using every feature costs nothing.</p></details>
+  <details class="rv"><summary>Is my data safe?</summary><p>Passwords are stored hashed, never as plain text. Messages are not end-to-end encrypted, so avoid sharing very sensitive information.</p></details>
+  <details class="rv"><summary>Does it work on my phone?</summary><p>Yes. Open the site in your phone browser and add it to your home screen, and it behaves like an app.</p></details>
+  <details class="rv"><summary>How do I install it on a computer?</summary><p>Press a Download button at the top. It installs the app from your browser, with its own window and icon.</p></details></section>
+ <section class="ft rv"><h2>Ready to start?</h2><p>Create a free account in a few seconds.</p><button class="btn pri" data-land="auth">Use website</button><div class="cp">© <span class="an2"></span> · Chat, call and play</div></section>
 </div>
-<div id="auth" hidden><div class="logo"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='lg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#37b6ff'/><stop offset='1' stop-color='#7b4dff'/></linearGradient></defs><path d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(#lg)'/><path d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='#fff' fill-opacity='.18'/><text x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='#fff' font-family='Arial,Helvetica,sans-serif'>C</text></svg><h2 id="an">Chatly</h2></div>
- <form id="af"><input id="u" placeholder="Username" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password">
- <button class="ok">Log in</button><button type="button" data-do="reg">Register</button></form><button type="button" data-land="back" style="margin-top:12px;background:none;color:var(--m);width:100%">← Back</button></div>
+<div id="auth" hidden><div class="ac"><div class="logo"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='lg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#37b6ff'/><stop offset='1' stop-color='#7b4dff'/></linearGradient></defs><path d='M14 4h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H32L16 61V50h-2A10 10 0 0 1 4 40V14A10 10 0 0 1 14 4z' fill='url(#lg)'/><path d='M14 4h36a10 10 0 0 1 10 10v6C46 28 22 24 4 18v-4A10 10 0 0 1 14 4z' fill='#fff' fill-opacity='.18'/><text x='32' y='39' font-size='30' font-weight='800' text-anchor='middle' fill='#fff' font-family='Arial,Helvetica,sans-serif'>C</text></svg><h2 id="an">Chatly</h2></div>
+ <p class="sub">Welcome back. Log in, or create a new account in seconds.</p>
+<form id="af"><input id="u" placeholder="Username" autocomplete="username" autocapitalize="none" spellcheck="false"><div class="pwr"><input id="pw" type="password" placeholder="Password" autocomplete="current-password"><button type="button" class="eye" data-land="eye" title="Show password" tabindex="-1">👁</button></div>
+ <button class="ok">Log in</button><button type="button" class="ghost" data-do="reg">Create account</button><div class="hint2">Username: 3–20 letters, digits or _ · Password: at least 4 characters</div></form><button type="button" data-land="back" style="margin-top:12px;background:none;color:var(--m);width:100%">← Back</button></div></div>
 <div id="app" hidden>
  <aside id="side"><div id="me" data-do="profile"></div>
   <div id="tabs"><button data-t="chats">Chats</button><button data-t="friends">Friends</button><button data-t="groups">Groups</button></div>
@@ -155,12 +202,12 @@ button:active{transform:scale(.96)}.it:active{transform:scale(.99)}
   <div id="list"></div></aside>
  <main id="main"><div id="empty">Select a chat to start messaging</div>
   <div id="chat" hidden><div id="hd"></div><div id="pb" hidden></div><div id="msgs"></div><button id="dn" hidden data-do="tobot">⬇</button><div id="rb" hidden></div><div id="ep" hidden></div>
-   <form id="f"><button type="button" data-do="ept">😊</button><button type="button" data-do="pollnew" title="Poll">📊</button><input id="in" placeholder="Write a message…" autocomplete="off"><button>➤</button></form></div></main>
+   <form id="f"><button type="button" data-do="ept">😊</button><button type="button" data-do="pollnew" title="Poll">📊</button><button type="button" data-do="photo" title="Send photo">📎</button><input id="in" placeholder="Write a message…" autocomplete="off"><button>➤</button></form></div></main>
 </div>
 <div id="modal" hidden><div id="box"></div></div>
 <div id="call" hidden><video id="rv" autoplay playsinline></video><audio id="ra" autoplay></audio><video id="lv" autoplay playsinline muted></video>
  <div id="cs"></div><div id="cc"><button data-do="cmute">🎤</button><button data-do="ccam">📷</button><button data-do="cscr">🖥</button><button data-do="cbg">🖼</button><button data-do="cend" class="red">📵</button></div></div>
-<input type="file" id="sfile" accept="image/*" hidden><div id="act" hidden></div><div id="toast" hidden></div>
+<input type="file" id="sfile" accept="image/*" hidden><div id="act" hidden></div><input type="file" id="pfile" accept="image/*" hidden><div id="lb" hidden></div><div id="toast" hidden></div>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const APP_NAME='Chatly';document.title=APP_NAME;$('#an').textContent=APP_NAME;
@@ -626,9 +673,31 @@ function animNew(c){const els=[...document.querySelectorAll('#msgs .m[data-id]')
     const t=e.target.closest('[data-land]');if(!t)return;const a=t.dataset.land;
     if(a=='auth'){$('#land').hidden=true;$('#auth').hidden=false;$('#u').focus()}
     else if(a=='back'){$('#auth').hidden=true;$('#land').hidden=false}
-    else if(a=='go'){S.inst&&S.inst.prompt();closeModal()}else if(a=='close')closeModal()});
+    else if(a=='eye'){const i=$('#pw');i.type=i.type=='password'?'text':'password'}else if(a=='go'){S.inst&&S.inst.prompt();closeModal()}else if(a=='close')closeModal()});
   if('IntersectionObserver' in window){const io=new IntersectionObserver(r=>r.forEach(x=>{if(x.isIntersecting){x.target.classList.add('show');io.unobserve(x.target)}}),{threshold:.12});
     document.querySelectorAll('.rv').forEach((e,i)=>{e.style.transitionDelay=(i%4)*70+'ms';io.observe(e)})}else document.querySelectorAll('.rv').forEach(e=>e.classList.add('show'))})();
+
+// ---------- photos: send, paste, drag-drop, lightbox ----------
+async function sendPhoto(f){if(!f||!S.cur||!/^image\//.test(f.type))return;toast('Preparing photo…');let d;
+  try{const bm=await createImageBitmap(f);let z=640,q=.82;
+    for(let i=0;i<9;i++){const k=Math.min(1,z/Math.max(bm.width,bm.height)),cv=document.createElement('canvas');cv.width=Math.max(1,bm.width*k|0);cv.height=Math.max(1,bm.height*k|0);
+      cv.getContext('2d').drawImage(bm,0,0,cv.width,cv.height);d=cv.toDataURL('image/webp',q);if(d.length<=60000)break;z*=.8;q*=.88}
+    if(d.length>60000)return toast('This photo is too detailed to send')}
+  catch{return toast('Cannot read this image')}
+  const r=await api('img',{d});if(r.id)sendSt('img:'+r.id)}
+$('#pfile').addEventListener('change',e=>{sendPhoto(e.target.files[0]);e.target.value=''});
+$('#in').addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])].find(x=>/^image\//.test(x.type));if(f){e.preventDefault();sendPhoto(f)}});
+const chatEl=$('#chat');['dragenter','dragover'].forEach(n=>chatEl.addEventListener(n,e=>{if([...(e.dataTransfer?.types||[])].includes('Files')){e.preventDefault();chatEl.classList.add('dz')}}));
+['dragleave','drop'].forEach(n=>chatEl.addEventListener(n,e=>{if(n=='drop'||e.target===chatEl)chatEl.classList.remove('dz')}));
+chatEl.addEventListener('drop',e=>{const f=[...(e.dataTransfer?.files||[])].find(x=>/^image\//.test(x.type));if(f){e.preventDefault();sendPhoto(f)}});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-do=photo]');if(t)return $('#pfile').click();
+  const im=e.target.closest('.m .sti:not(.sm)');if(im){$('#lb').innerHTML='<img src="'+esc(im.src)+'" alt="">';$('#lb').hidden=false;return}
+  if(e.target.closest('#lb'))$('#lb').hidden=true},true);
+addEventListener('keydown',e=>{if(e.key=='Escape'&&!$('#lb').hidden)$('#lb').hidden=true});
+
+// ---------- press ripple ----------
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*2,x=document.createElement('span');
+  x.className='rp';x.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;b.appendChild(x);setTimeout(()=>x.remove(),650)});
 
 if(S.token&&S.me)start();
 </script></body></html>
