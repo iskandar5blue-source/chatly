@@ -133,6 +133,10 @@ function act(L,p,b){
   switch(b.a){
   case'addp':{const u=nm(b.u);if(!okName(u))throw'Username: 3-20 characters, a-z 0-9 _';if(D.profiles[u])throw'Username is taken';
     D.logins[L].profiles.push(u);D.profiles[u]=L;save();return{profiles:D.logins[L].profiles}}
+  case'ice':{const tu=String(process.env.TURN_URLS||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const out=[{urls:'stun:stun.l.google.com:19302'}];
+    if(tu.length)out.unshift({urls:tu,username:process.env.TURN_USER||'',credential:process.env.TURN_PASS||''});
+    return{iceServers:out}}
   case'sync':return sync(p,L);
   case'voice':{const d=String(b.d||'');
     if(d.length>190000||!/^data:audio\/(webm|ogg|mp4)(;[^,]*)?;base64,[A-Za-z0-9+\/=]+$/.test(d))throw'Voice message too long or bad format';
