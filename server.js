@@ -1,5 +1,5 @@
 const http=require('http'),fs=require('fs'),path=require('path'),cr=require('crypto');
-const FILE=path.join(__dirname,'data2.json'),RU=(process.env.UPSTASH_REDIS_REST_URL||'').replace(/\/$/,''),RT=process.env.UPSTASH_REDIS_REST_TOKEN||'',LIM=RU?4000:30000;
+const FILE=path.join(__dirname,'data2.json'),RU=(process.env.UPSTASH_REDIS_REST_URL||'').replace(/\/$/,''),RT=process.env.UPSTASH_REDIS_REST_TOKEN||'',LIM=Infinity;
 let D={logins:{},profiles:{},tokens:{},friends:{},groups:{},msgs:[],reads:{},n:1,pf:{},seen:{},pins:{},blocks:{},ttl:{}};
 if(!RU)try{D=Object.assign(D,JSON.parse(fs.readFileSync(FILE,'utf8')))}catch{}
 let dirty=false,busy=false;const save=()=>{dirty=true};
@@ -30,6 +30,9 @@ const fr=p=>D.friends[p]||(D.friends[p]={f:[],i:[],o:[]});
 const dmid=(a,b)=>'d:'+[a,b].sort().join('|');
 const mem=c=>c[0]=='d'?c.slice(2).split('|'):(D.groups[c.slice(2)]||{members:[]}).members;
 const sys=(c,t)=>{D.msgs.push({id:D.n++,c,f:'',t,ts:Date.now(),s:1})};
+setInterval(()=>{if(!D.sched||!D.sched.length)return;const now=Date.now(),due=D.sched.filter(x=>x.at<=now);if(!due.length)return;
+  for(const x of due){try{const m=mem(x.c);if(m.includes(x.f)){addM({c:x.c,f:x.f,t:x.t,...xp(x.c)});push(m,{e:'sync'})}}catch{}}
+  D.sched=D.sched.filter(x=>x.at>now);save()},5000);
 const xp=c=>D.ttl[c]?{x:Date.now()+D.ttl[c]*1000}:{};
 const addM=o=>{D.msgs.push({id:D.n++,ts:Date.now(),...o});if(D.msgs.length>LIM)D.msgs.splice(0,500)};
 const dmOk=(c,p)=>{if(c[0]!='d')return;const o=mem(c).find(x=>x!=p);if(!fr(p).f.includes(o))throw'You are not friends';
@@ -49,8 +52,22 @@ function reg(b){const u=nm(b.u),pw=String(b.pw||'');
   const salt=cr.randomBytes(16).toString('hex');
   D.logins[u]={salt,hash:hash(pw,salt),profiles:[u]};D.profiles[u]=u;save();
   return{token:mkTok(u),profiles:[u]}}
+// ---- two-step verification (TOTP, RFC 6238) ----
+const B32='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',PEND2={},PENDSET={};
+const b32e=buf=>{let bits=0,v=0,o='';for(const x of buf){v=((v<<8)|x)&0xffff;bits+=8;while(bits>=5){o+=B32[(v>>>(bits-5))&31];bits-=5}}if(bits>0)o+=B32[(v<<(5-bits))&31];return o};
+const b32d=s=>{let bits=0,v=0;const out=[];for(const c of String(s).toUpperCase().replace(/=+$/,'')){const i=B32.indexOf(c);if(i<0)continue;v=((v<<5)|i)&0xffff;bits+=5;if(bits>=8){out.push((v>>>(bits-8))&255);bits-=8}}return Buffer.from(out)};
+const hotp=(key,ctr)=>{const b=Buffer.alloc(8);b.writeBigUInt64BE(BigInt(ctr));const h=cr.createHmac('sha1',key).update(b).digest();const o=h[h.length-1]&15;return String(((h.readUInt32BE(o)&0x7fffffff)%1000000)).padStart(6,'0')};
+const otpOk=(o,code)=>{const key=b32d(o.secret),now=Date.now(),c=String(code||'').replace(/\s/g,'');for(const d of [-1,0,1]){const ctr=Math.floor((now+d*30000)/30000);if(c&&hotp(key,ctr)===c&&ctr>(o.last||0)){o.last=ctr;return true}}return false};
+const recHash=s=>cr.createHash('sha256').update(String(s).toLowerCase().replace(/[^a-z0-9]/g,'')).digest('hex');
+function otpLogin(b){const x=PEND2[String(b.tmp||'')];if(!x||x.exp<Date.now())throw'Code expired. Log in again.';
+  const L=D.logins[x.u];if(!L||!L.otp||!L.otp.on)throw'Log in again';
+  const code=String(b.code||'').trim();let ok=otpOk(L.otp,code);
+  if(!ok){const i=(L.otp.rec||[]).indexOf(recHash(code));if(i>=0){L.otp.rec.splice(i,1);ok=true}}
+  if(!ok)throw'Wrong code';
+  save();delete PEND2[String(b.tmp)];return{token:mkTok(x.u),profiles:L.profiles}}
 function login(b){const u=nm(b.u),L=D.logins[u];
   if(!L||hash(String(b.pw||''),L.salt)!==L.hash)throw'Wrong username or password';
+  if(L.otp&&L.otp.on){const tmp=cr.randomBytes(18).toString('hex');PEND2[tmp]={u,exp:Date.now()+300000};return{need:'otp',tmp}}
   return{token:mkTok(u),profiles:L.profiles}}
 function sync(p,L){const f=fr(p);
   const gs=Object.values(D.groups).filter(g=>g.members.includes(p));
@@ -73,11 +90,17 @@ function act(L,p,b){
   case'addp':{const u=nm(b.u);if(!okName(u))throw'Username: 3-20 characters, a-z 0-9 _';if(D.profiles[u])throw'Username is taken';
     D.logins[L].profiles.push(u);D.profiles[u]=L;save();return{profiles:D.logins[L].profiles}}
   case'sync':return sync(p,L);
+  case'voice':{const d=String(b.d||'');
+    if(d.length>190000||!/^data:audio\/(webm|ogg|mp4)(;[^,]*)?;base64,[A-Za-z0-9+\/=]+$/.test(d))throw'Voice message too long or bad format';
+    const id=cr.createHash('sha1').update(d).digest('hex').slice(0,16);IM[id]={d,ts:Date.now()};
+    let tot=Object.values(IM).reduce((a,x)=>a+x.d.length,0);const ks=Object.keys(IM).sort((x,y)=>IM[x].ts-IM[y].ts);
+    while(tot>4000000&&ks.length>1){const k=ks.shift();if(k==id)continue;tot-=IM[k].d.length;delete IM[k]}
+    imDirty=true;return{id}}
   case'img':{const d=String(b.d||'');
     if(d.length>80000||!/^data:image\/(png|webp|jpeg|gif);base64,[A-Za-z0-9+\/=]+$/.test(d))throw'Bad image (max about 60 KB)';
     const id=cr.createHash('sha1').update(d).digest('hex').slice(0,16);IM[id]={d,ts:Date.now()};
     let tot=Object.values(IM).reduce((a,x)=>a+x.d.length,0);const ks=Object.keys(IM).sort((x,y)=>IM[x].ts-IM[y].ts);
-    while(tot>800000&&ks.length>1){const k=ks.shift();if(k==id)continue;tot-=IM[k].d.length;delete IM[k]}
+    while(tot>4000000&&ks.length>1){const k=ks.shift();if(k==id)continue;tot-=IM[k].d.length;delete IM[k]}
     imDirty=true;return{id}}
   case'prof':{const n=String(b.n||'').trim().slice(0,32),bio=String(b.b||'').trim().slice(0,200);
     if(n||bio)D.pf[p]={n,b:bio};else delete D.pf[p];save();push([p,...fr(p).f],{e:'sync'});return{}}
@@ -111,9 +134,24 @@ function act(L,p,b){
     const nw=String(b.nw||'');if(nw.length<4)throw'Password is too short (min 4)';
     L2.salt=cr.randomBytes(16).toString('hex');L2.hash=hash(nw,L2.salt);
     for(const k of Object.keys(D.tokens))if(D.tokens[k]==L&&k!=b.token)delete D.tokens[k];save();return{}}
+  case'totpSetup':{const sec=b32e(cr.randomBytes(20));PENDSET[L]=sec;return{secret:sec}}
+  case'totpEnable':{const sec=PENDSET[L];if(!sec)throw'Start the setup again';if(!otpOk({secret:sec,last:0},b.code))throw'Wrong code, try again';
+    const codes=[...Array(8)].map(()=>cr.randomBytes(4).toString('hex').replace(/^(.{4})/,'$1-'));
+    D.logins[L].otp={secret:sec,on:true,last:0,rec:codes.map(recHash)};delete PENDSET[L];save();return{codes}}
+  case'totpOff':{const LL=D.logins[L];if(!LL.otp)throw'Two-step verification is not on';if(hash(String(b.pw||''),LL.salt)!==LL.hash)throw'Wrong password';delete LL.otp;save();return{}}
+  case'report':{const c=String(b.c||''),m=D.msgs.find(x=>x.id==b.id&&x.c==c);if(!m||!mem(c).includes(p))throw'Cannot report';
+    (D.reports=D.reports||[]).push({by:p,c,id:m.id,from:m.f,reason:String(b.reason||'').slice(0,60),ts:Date.now()});if(D.reports.length>500)D.reports.splice(0,100);save();return{}}
+  case'sched':{const c=String(b.c||''),m=mem(c),t=String(b.t||'').trim().slice(0,2000),at=+b.at;
+    if(!t||!m.includes(p))throw'Cannot schedule';if(!(at>Date.now()+30000)||at>Date.now()+30*864e5)throw'Pick a time between 1 minute and 30 days ahead';
+    D.sched=D.sched||[];if(D.sched.filter(x=>x.f==p).length>=50)throw'Too many scheduled messages (max 50)';
+    dmOk(c,p);D.sched.push({id:cr.randomBytes(6).toString('hex'),f:p,c,t,at});save();return{}}
+  case'schedlist':return{items:(D.sched||[]).filter(x=>x.f==p).map(({id,c,t,at})=>({id,c,t,at}))};
+  case'schedcancel':{D.sched=(D.sched||[]).filter(x=>!(x.f==p&&x.id==String(b.id)));save();return{}}
   case'msg':{const t=String(b.t||'').trim().slice(0,2000),m=mem(String(b.c));
     if(!t||!m.includes(p))throw'Cannot send';
+    const cg=String(b.c)[0]=='g'&&D.groups[String(b.c).slice(2)];if(cg&&cg.channel&&role(cg,p)=='member')throw'Only admins can post in this channel';
     if(t.startsWith('img:')&&!IM[t.slice(4)])throw'Image not found';
+    if(t.startsWith('vc:')&&!/^vc:[0-9a-f]{16}$/.test(t)||t.startsWith('vc:')&&!IM[t.slice(3)])throw'Voice not found';
     if(t.startsWith('gif:')&&!/^gif:https:\/\/[^\s<>"']{4,480}$/.test(t))throw'Bad GIF link';
     dmOk(String(b.c),p);
     const rp=b.r?D.msgs.find(x=>x.id==b.r&&x.c==b.c):null;
@@ -131,6 +169,9 @@ function act(L,p,b){
   case'read':{const c=String(b.c),m=mem(c),id=+b.id||0;if(!m.includes(p))throw'No access';const k=c+'#'+p;
     if(id>(D.reads[k]||0)){D.reads[k]=id;save();push(m.filter(x=>x!=p),{e:'rd',c,f:p,id})}return{}}
   case'typing':{const m=mem(String(b.c));if(m.includes(p))push(m.filter(x=>x!=p),{e:'typing',c:b.c,f:p});return{}}
+  case'gsig':{const gid=String(b.g||'').replace(/^g:/,''),gr=D.groups[gid],to=String(b.to||'');
+    if(!gr||!gr.members.includes(p)||!gr.members.includes(to))throw'Not allowed';
+    push([to],{e:'gsig',f:p,g:'g:'+gid,d:b.d});return{}}
   case'sig':{if(!fr(p).f.includes(b.to))throw'You are not friends';push([b.to],{e:'sig',f:p,d:b.d});return{}}
   case'actv':{const c=String(b.c),m=mem(c);if(!m.includes(p))throw'No access';
     if(c[0]=='d'&&!fr(p).f.includes(m.find(x=>x!=p)))throw'You are not friends';
@@ -147,7 +188,7 @@ function act(L,p,b){
     save();push([p,t],{e:'sync'});return{}}
   case'gnew':{const n=String(b.name||'').trim().slice(0,40);if(!n)throw'Group name is required';
     const id=String(D.n++);
-    D.groups[id]={id,name:n,owner:p,admins:[],members:[p],pub:!!b.pub,code:cr.randomBytes(4).toString('hex')};
+    D.groups[id]={id,name:n,owner:p,admins:[],members:[p],pub:!!b.pub,channel:!!b.ch,code:cr.randomBytes(4).toString('hex')};
     sys('g:'+id,p+' created the group');save();push([p],{e:'sync'});return{id:'g:'+id}}
   case'gjoin':{const h=b.id?D.groups[b.id]:Object.values(D.groups).find(x=>x.code==String(b.code||'').trim());
     if(!h||(b.id&&!h.pub))throw'Group not found';if(h.members.includes(p))throw'Already a member';
@@ -194,7 +235,7 @@ const srv=http.createServer((q,s)=>{
     q.on('data',c=>{d+=c;if(d.length>2e5)q.destroy()});
     q.on('end',async()=>{let r;const ip=(q.headers['x-forwarded-for']||q.socket.remoteAddress||'').split(',')[0].trim();
       try{const b=JSON.parse(d);
-        if((b.a=='reg'||b.a=='login')&&limited(ip))throw'Too many attempts. Try again in a few minutes.';if(b.a=='reg')r=reg(b);else if(b.a=='login')r=login(b);else if(b.a=='gifs'){if(!D.tokens[b.token])throw'AUTH';r=await gifs(b)}
+        if((b.a=='reg'||b.a=='login'||b.a=='otp')&&limited(ip))throw'Too many attempts. Try again in a few minutes.';if(b.a=='reg')r=reg(b);else if(b.a=='login')r=login(b);else if(b.a=='otp')r=otpLogin(b);else if(b.a=='gifs'){if(!D.tokens[b.token])throw'AUTH';r=await gifs(b)}
         else{const L=D.tokens[b.token];if(!L)throw'AUTH';
           if(b.a!='addp'&&!D.logins[L].profiles.includes(b.as))throw'Bad profile';
           r=act(L,b.as,b)}}
