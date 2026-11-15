@@ -334,7 +334,7 @@ const focusIn=el=>{const a=document.activeElement;return a&&a.tagName=='INPUT'&&
 // ---------- auth / connection ----------
 async function auth(a){const r=await api(a,{u:$('#u').value,pw:$('#pw').value});if(r.err)return;if(r.need==='otp')return showOtp(r.tmp);if(!r.token)return;
   S.token=r.token;localStorage.tok=r.token;S.me=r.profiles.includes(localStorage.me)?localStorage.me:r.profiles[0];start()}
-function start(){$('#land').hidden=true;$('#auth').hidden=true;$('#app').hidden=false;localStorage.me=S.me;connect();refresh()}
+function start(){api('ice',{}).then(r=>{if(r&&r.iceServers)ICE=r});$('#land').hidden=true;$('#auth').hidden=true;$('#app').hidden=false;localStorage.me=S.me;connect();refresh()}
 function connect(){es&&es.close();es=new EventSource('/events?token='+S.token);
   es.onmessage=m=>{const v=JSON.parse(m.data);if(!v.for.includes(S.me))return;
     if(v.e=='sync')refresh();else if(v.e=='typing'){S.typing[v.c+'|'+v.f]=Date.now();drawChat();if(S.tab=='chats'&&!focusIn($('#list')))drawList()}
@@ -622,7 +622,7 @@ const cbgList=()=>{const l=CBGS.map(s=>`url("${s}")`);if(localStorage.bgimg)l.pu
 function applyCbg(){const l=cbgList();$('#call').style.background=l[(+localStorage.cbg||0)%l.length]+' center/cover no-repeat'}
 
 // ---------- calls (WebRTC, 1-to-1) ----------
-const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+let ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
 const sig=(to,d)=>api('sig',{to,d});
 async function media(video){try{return await navigator.mediaDevices.getUserMedia({audio:true,video})}catch{toast('Camera/microphone unavailable (needs HTTPS and permission)');return null}}
 function showCall(t){applyCbg();$('#call').hidden=false;$('#cs').textContent=t;$('#lv').srcObject=C.st}
@@ -632,7 +632,7 @@ async function acceptCall(){const r=S.ring;S.ring=null;closeModal();if(!r||C)ret
   if(!st){sig(r.pr,{t:'rej'});return}C={peer:r.pr,st,pc:null,ready:false};mkpc();showCall('Connecting…');sig(r.pr,{t:'accept'})}
 function mkpc(){const pc=new RTCPeerConnection(ICE);C.pc=pc;
   pc.onicecandidate=x=>x.candidate&&C&&sig(C.peer,{t:'ice',c:x.candidate});
-  pc.ontrack=x=>{if(x.track.kind=='video')$('#rv').srcObject=new MediaStream([x.track]);else $('#ra').srcObject=new MediaStream([x.track]);$('#cs').textContent=C?C.peer+' · connected':''};
+  pc.ontrack=x=>{if(x.track.kind=='video')$('#rv').srcObject=new MediaStream([x.track]);else{const a=$('#ra');a.srcObject=new MediaStream([x.track]);a.play().catch(()=>toast('Tap the call screen to turn on sound'))}$('#cs').textContent=C?C.peer+' · connected':''};
   pc.onnegotiationneeded=async()=>{if(!C||!C.ready)return;await pc.setLocalDescription(await pc.createOffer());sig(C.peer,{t:'offer',s:pc.localDescription})};
   pc.onconnectionstatechange=()=>{if(C&&pc.connectionState=='failed')endCall(true)}}
 async function onSig(v){const d=v.d,pr=v.f;
