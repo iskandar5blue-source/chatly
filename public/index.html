@@ -304,7 +304,7 @@ kbd{background:#ffffff14;border:1px solid #ffffff22;border-bottom-width:2px;bord
   <div id="list"></div></aside>
  <main id="main"><div id="empty">Select a chat to start messaging</div>
   <div id="chat" hidden><div id="hd"></div><div id="pb" hidden></div><div id="msgs"></div><button id="dn" hidden data-do="tobot">⬇</button><div id="rb" hidden></div><div id="ep" hidden></div>
-   <div id="sb" hidden></div><form id="f"><button type="button" data-do="ept">😊</button><button type="button" data-do="pollnew" title="Poll">📊</button><button type="button" data-do="photo" title="Send photo">📎</button><input id="in" placeholder="Write a message…" autocomplete="off"><button>➤</button></form></div></main>
+   <div id="sb" hidden></div><form id="f"><button type="button" data-do="ept">😊</button><button type="button" data-do="pollnew" title="Poll">📊</button><button type="button" data-do="photo" title="Send photo">📎</button><button type="button" data-do="voice" id="vbtn" title="Voice message">🎤</button><button type="button" data-do="schOpen" title="Schedule message">🕒</button><input id="in" placeholder="Write a message…" autocomplete="off"><button>➤</button></form></div></main>
 </div>
 <div id="modal" hidden><div id="box"></div></div>
 <div id="gcall" hidden><div class="gc-top"><b id="gcs">Group call</b></div><div id="ggrid"></div><div class="gc-ctl"><button data-do=gcmic title="Microphone">🎤</button><button data-do=gccam title="Camera">📷</button><button class="gc-end" data-do=gcleave title="Leave">⏹</button></div></div>
@@ -330,7 +330,7 @@ const dmId=u=>'d:'+[S.me,u].sort().join('|');
 const focusIn=el=>{const a=document.activeElement;return a&&a.tagName=='INPUT'&&el.contains(a)};
 
 // ---------- auth / connection ----------
-async function auth(a){const r=await api(a,{u:$('#u').value,pw:$('#pw').value});if(r.err||!r.token)return;
+async function auth(a){const r=await api(a,{u:$('#u').value,pw:$('#pw').value});if(r.err)return;if(r.need==='otp')return showOtp(r.tmp);if(!r.token)return;
   S.token=r.token;localStorage.tok=r.token;S.me=r.profiles.includes(localStorage.me)?localStorage.me:r.profiles[0];start()}
 function start(){$('#land').hidden=true;$('#auth').hidden=true;$('#app').hidden=false;localStorage.me=S.me;connect();refresh()}
 function connect(){es&&es.close();es=new EventSource('/events?token='+S.token);
@@ -397,6 +397,29 @@ async function upSt(f){if(!f)return;let d;
 // ---------- v3 features ----------
 const pfOf=u=>((S.d&&S.d.pf)||{})[u]||{},dn=u=>pfOf(u).n||u,bl=()=>(S.d&&S.d.bl)||[];
 const ago=t=>{const d=Date.now()-t;if(d<60000)return'just now';if(d<3600000)return Math.floor(d/60000)+' min ago';const dt=new Date(t);return(new Date().toDateString()==dt.toDateString()?'today at ':dt.toLocaleDateString([],{month:'short',day:'numeric'})+' at ')+hm(t)};
+const vcH=t=>'<audio class=vc controls preload=metadata src="/img/'+esc(t.slice(3))+'"></audio>';
+let REC=null,recT=0;
+async function doVoice(){
+  if(!S.cur)return toast('Open a chat first');
+  if(REC){REC.stop();return}
+  if(!navigator.mediaDevices||!window.MediaRecorder)return toast('Voice messages are not supported in this browser');
+  let st;try{st=await navigator.mediaDevices.getUserMedia({audio:true})}catch{return toast('Microphone access denied')}
+  const ch=[],mime=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(x=>MediaRecorder.isTypeSupported(x))||'';
+  const rec=new MediaRecorder(st,mime?{mimeType:mime,audioBitsPerSecond:16000}:{audioBitsPerSecond:16000});
+  const c=S.cur,r=S.rep||0,btn=$('#vbtn');
+  rec.ondataavailable=e=>{if(e.data.size)ch.push(e.data)};
+  rec.onstop=async()=>{clearTimeout(recT);st.getTracks().forEach(t=>t.stop());REC=null;btn.textContent='🎤';btn.style.color='';
+    const blob=new Blob(ch,{type:rec.mimeType||'audio/webm'});if(blob.size<800)return toast('Recording too short');
+    const d=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(blob)});
+    if(d.length>190000)return toast('Voice message too long (max about 45 seconds)');
+    const up=await api('voice',{d});if(up&&up.id){await api('msg',{c,t:'vc:'+up.id,r});S.rep=S.edit=0;rbar()}};
+  REC=rec;rec.start();btn.textContent='⏹';btn.style.color='#e5484d';
+  recT=setTimeout(()=>{if(REC)REC.stop()},45000);toast('Recording… tap ⏹ to send');
+};
+function doExp(){const c=S.cur;if(!c)return;
+  const lines=curMsgs().filter(m=>!m.s).map(m=>'['+new Date(m.ts).toLocaleString()+'] '+dn(m.f)+': '+(m.poll?'[poll]':isSt(m.t)?'[sticker]':m.t.startsWith('vc:')?'[voice message]':m.t));
+  const b=new Blob(['Chat with '+nameOf(c)+'\nExported '+new Date().toLocaleString()+'\n\n'+lines.join('\n')],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(nameOf(c)||'chat').replace(/[^\w-]+/g,'_')+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 const lsText=u=>S.d.on.includes(u)?'<i class=onl>online</i>':(S.d.ls||{})[u]?'last seen '+ago(S.d.ls[u]):'offline';
 const dayLbl=ts=>{const d=new Date(ts),n=new Date(),y=new Date(Date.now()-864e5);return d.toDateString()==n.toDateString()?'Today':d.toDateString()==y.toDateString()?'Yesterday':d.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'})};
 const canPin=c=>c[0]=='d'||(grp(c)&&roleOf(grp(c),S.me)!='member');
@@ -421,7 +444,7 @@ applyTheme();
 function cmenu(){const c=S.cur;if(!c||!S.d)return closeModal();const g=c[0]=='g'?grp(c):null,u=g?null:other(c),p=u?pfOf(u):{},ttl=(S.d.ttl||{})[c]||0,blk=u&&bl().includes(u),adm=!g||roleOf(g,S.me)!='member';
   $('#box').innerHTML=`<div class=row>${av(nameOf(c))}<div class=tx><b>${esc(nameOf(c))}</b><span>${g?(g.members.length+' members'):'@'+esc(u)+' · '+lsText(u)}</span></div></div>`
    +(g&&g.desc?`<div class=hint>${esc(g.desc)}</div>`:'')+(p.b?`<div class=hint>${esc(p.b)}</div>`:'')
-   +`<button data-do=mute>${isMuted(c)?'🔔 Unmute notifications':'🔕 Mute notifications'}</button><button data-do=cpin>${cpin(c)?'📌 Unpin chat from top':'📌 Pin chat to top'}</button><button data-do=csearch>🔍 Search in chat</button>`
+   +`<button data-do=mute>${isMuted(c)?'🔔 Unmute notifications':'🔕 Mute notifications'}</button><button data-do=cpin>${cpin(c)?'📌 Unpin chat from top':'📌 Pin chat to top'}</button><button data-do=csearch>🔍 Search in chat</button><button data-do=exp>⬇ Export chat (.txt)</button><button data-do=chArch>${isArch(c)?'🗄 Unarchive chat':'🗄 Archive chat'}</button><button data-do=chFold>📁 Add to folder…</button><button data-do=schList>🕒 Scheduled messages</button>`
    +(adm?`<label class=hint>⏱ Auto-delete messages<select id=ttl>${[[0,'Off'],[3600,'1 hour'],[86400,'1 day'],[604800,'1 week']].map(([v,l])=>`<option value=${v} ${v==ttl?'selected':''}>${l}</option>`).join('')}</select></label>`:'')
    +(g?`<button data-do=ginfo>ⓘ Group info and members</button>`:`<button class=red data-do=blk data-v=${blk?0:1}>${blk?'Unblock user':'🚫 Block user'}</button>`)
    +(adm?`<button class=red data-do=clr>🗑 Clear history for everyone</button>`:'')}
@@ -437,7 +460,7 @@ function profileModal(){if($('#pfn'))return;const p=pfOf(S.me);
    +`<h3>Profile</h3><form id=pf><input id=pfn placeholder="Display name" maxlength=32 value="${esc(p.n||'')}"><input id=pfb placeholder="Bio" maxlength=200 value="${esc(p.b||'')}"><button class=ok>Save profile</button></form>`
    +`<h3>Appearance</h3><div class=row><button data-do=theme>🌗 Light / dark</button>${ACC.map(a=>`<button class=acc style="background:${a}" data-do=acc data-v="${a}"></button>`).join('')}</div>`
    +`<div class=row><button data-do=ui data-v=zm>Aa−</button><button data-do=ui data-v=zp>Aa+</button><button data-do=ui data-v=cmp>↕ Compact</button><button data-do=keys>⌨ Shortcuts</button></div><div class=row><button data-do=snd>🔔 Sound on/off</button><button data-do=bgm>🎨 Chat background</button></div>`
-   +`<h3>Security</h3><form id=pwf><input id=pw0 type=password placeholder="Current password" autocomplete=current-password><input id=pw1 type=password placeholder="New password" autocomplete=new-password><button>Change password</button></form>`
+   +`<h3>Security</h3><form id=pwf><input id=pw0 type=password placeholder="Current password" autocomplete=current-password><input id=pw1 type=password placeholder="New password" autocomplete=new-password><button>Change password</button></form><h3>Two-step verification</h3><div class=row><button data-do=twoSetup>🔐 Turn on 2FA</button><button class=red data-do=twoOff>Turn off 2FA</button></div>`
    +`<div class=row>${S.inst?'<button class=ok data-do=inst>⬇ Install app</button>':''}<button class=red data-do=lo>Log out</button></div>`}
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();S.inst=e});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
@@ -450,7 +473,7 @@ const linkify=t=>t.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target=_blank r
 function mh(m,c,g,mod){if(m.s)return`<div class=sys>${esc(m.t)}</div>`;const me=m.f==S.me,q=m.r?(S.d.msgs[c]||[]).find(x=>x.id==m.r):null,pr=S.d.pr[c]||0;
   return`<div class="m ${me?'me':''}${isSt(m.t)?' stk':''}" data-id=${m.id}><div class=ma>${['👍','❤️','😂','🔥'].map(e=>`<span data-do=rx data-v="${m.id}|${e}">${e}</span>`).join('')}<span data-do=rep data-v=${m.id}>↩</span><span data-do=sav data-v=${m.id} title=Save>⭐</span>${m.poll?'':`<span data-do=fwdm data-v=${m.id}>⤳</span>`}${canPin(c)?`<span data-do=pinm data-v=${m.id}>📌</span>`:''}${m.poll||isSt(m.t)?'':`<span data-do=cpy data-v=${m.id}>📋</span>`}${me&&!isSt(m.t)&&!m.poll?`<span data-do=edt data-v=${m.id}>✏️</span>`:''}${me||mod?`<span data-do=del data-v=${m.id}>🗑</span>`:''}</div>`
    +(g&&!me?`<b class=who>${esc(dn(m.f))}</b>`:'')+(m.fw?`<div class=fw>⤳ Forwarded from <b>${esc(dn(m.fw))}</b></div>`:'')+(m.r?`<div class=rq ${q?`data-do=goto data-v=${m.r} style="--rc:${nc(q.f)}"`:''}>${q?`<b>${esc(dn(q.f))}</b><span>${esc(pv(q.t).slice(0,90))}</span>`:'<i>Deleted message</i>'}</div>`:'')
-   +(m.poll?pollH(m):isSt(m.t)?stH(m.t):fmt(m.t))+`<time>${m.e?'edited · ':''}${hm(m.ts)}</time>`+(me&&c[0]=='d'?`<span class=tk style="color:${m.id<=pr?'#6ab3f3':'#9fb1c3'}">${m.id<=pr?'✓✓':'✓'}</span>`:'')
+   +(m.poll?pollH(m):isSt(m.t)?stH(m.t):m.t.startsWith('vc:')?vcH(m.t):fmt(m.t))+`<time>${m.e?'edited · ':''}${hm(m.ts)}</time>`+(me&&c[0]=='d'?`<span class=tk style="color:${m.id<=pr?'#6ab3f3':'#9fb1c3'}">${m.id<=pr?'✓✓':'✓'}</span>`:'')
    +(m.rx?`<div class=rx>${Object.entries(m.rx).map(([e,u])=>`<b class="${u.includes(S.me)?'me':''}" data-do=rx data-v="${m.id}|${e}">${e} ${u.length}</b>`).join('')}</div>`:'')+`</div>`}
 function markRead(){if(!S.cur||document.hidden||!S.d)return;const m=S.d.msgs[S.cur]||[],last=m.length?m[m.length-1].id:0;
   if(last>(S.d.rd[S.cur]||0)){S.d.rd[S.cur]=last;api('read',{c:S.cur,id:last})}}
@@ -469,7 +492,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.d)draw(
 function draw(){if(!S.d)return;
   $('#me').innerHTML=`${av(S.me)}<b>${esc(S.me)}</b><span>⇄</span>`;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==S.tab));
-  drawChat();markRead();if(!focusIn($('#list')))drawList();updTitle();
+  drawChat();chanUi();markRead();if(!focusIn($('#list')))drawList();updTitle();
   $('#nb').hidden=!(window.Notification&&Notification.permission=='default');$('#sq').hidden=S.tab!='chats';
   if(S.modal&&!$('#modal').hidden&&!focusIn($('#box')))S.modal()}
 function chats(){const d=S.d;return[...d.friends.f.map(f=>dmId(f)),...d.groups.map(g=>'g:'+g.id)]
@@ -529,7 +552,7 @@ const DO={
  facc:v=>api('facc',{to:v}),fdec:v=>api('fdec',{to:v}),frem:v=>confirm('Remove friend?')&&api('frem',{to:v}),
  del:v=>api('del',{id:+v}),
  gjoin:async v=>{const r=await api('gjoin',{id:v});r.id&&DO.open(r.id)},
- gnew:()=>show(()=>{$('#box').innerHTML=`<h3>New group</h3><form id=gn><input id=gname placeholder="Group name" maxlength=40><label><input type=checkbox id=gpub> Public (anyone can find and join)</label><button class=ok>Create</button></form>`}),
+ gnew:()=>show(()=>{$('#box').innerHTML=`<h3>New group</h3><form id=gn><input id=gname placeholder="Group name" maxlength=40><label><input type=checkbox id=gpub> Public (anyone can find and join)</label><label><input type=checkbox id=gch> Channel (only admins can post)</label><button class=ok>Create</button></form>`}),
  ginfo:()=>show(ginfo),cmenu:()=>show(cmenu),csearch:()=>show(csearch),pollnew:()=>show(pollModal),
  fwdm:v=>{S.fw=+v;show(fwdModal)},fwdto:async v=>{closeModal();const r=await api('fwd',{id:S.fw,c:v});if(!r.err)toast('Forwarded')},
  pinm:v=>api('pin',{c:S.cur,id:+v}),unpin:()=>api('pin',{c:S.cur,id:0}),
@@ -562,7 +585,7 @@ const DO={
 document.addEventListener('click',ev=>{const t=ev.target.closest('[data-do]');if(t){DO[t.dataset.do]?.(t.dataset.v);return}
   const b=ev.target.closest('#tabs button');if(b){S.tab=b.dataset.t;draw();return}
   const mm=ev.target.closest('.m');if(mm&&!ev.target.closest('a')){document.querySelectorAll('.m.sel').forEach(x=>x!=mm&&x.classList.remove('sel'));mm.classList.toggle('sel')}});
-const F={af:()=>auth('login'),
+const F={af:()=>auth('login'),otpf:()=>otpSubmit(),
  pf:async()=>{const r=await api('prof',{n:$('#pfn').value,b:$('#pfb').value});if(!r.err)toast('Profile saved')},
  pwf:async()=>{const r=await api('pw',{old:$('#pw0').value,nw:$('#pw1').value});if(!r.err){$('#pw0').value=$('#pw1').value='';toast('Password changed')}},
  pl:async()=>{const r=await api('poll',{c:S.cur,q:$('#pq').value,o:[...document.querySelectorAll('.po-i')].map(x=>x.value),mu:$('#pmu').checked});if(!r.err)closeModal()},
@@ -570,7 +593,7 @@ const F={af:()=>auth('login'),
  f:()=>{const i=$('#in');let t=i.value.trim();if(!t)return;t=slash(t);i.value='';if($('#sl'))$('#sl').hidden=true;if(t===null)return;setDraft(S.cur,'');$('#ep').hidden=true;if(S.edit)api('edit',{id:S.edit,t});else api('msg',{c:S.cur,t,r:S.rep||0});S.rep=S.edit=0;rbar()},
  fa:async()=>{const r=await api('fadd',{to:$('#fu').value});if(!r.err)$('#fu').value=''},
  jc:async()=>{const r=await api('gjoin',{code:$('#jcode').value});r.id&&DO.open(r.id)},
- gn:async()=>{const r=await api('gnew',{name:$('#gname').value,pub:$('#gpub').checked});if(r.id){closeModal();DO.open(r.id)}},
+ gn:async()=>{const r=await api('gnew',{name:$('#gname').value,pub:$('#gpub').checked,ch:$('#gch').checked});if(r.id){closeModal();DO.open(r.id)}},
  ga:async()=>{const r=await api('gadd',{id:grp(S.cur).id,u:$('#gau').value});if(!r.err)$('#gau').value=''},
  np:async()=>{const u=$('#npn').value.trim().toLowerCase();const r=await api('addp',{u});if(r.profiles)DO.sw(u)},
  yf:()=>{const m=$('#yu').value.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)||$('#yu').value.trim().match(/^([\w-]{11})$/);
@@ -804,11 +827,45 @@ document.addEventListener('pointerdown',e=>{const b=e.target.closest('button');i
 
 // ---------- v5: filters, saved messages, slash commands, shortcuts, appearance, confetti ----------
 S.flt='all';
-function fltOk(c){const f=S.flt||'all';return f=='all'||(f=='unread'&&unread(c)>0)||(f=='groups'&&c[0]=='g')||(f=='direct'&&c[0]=='d')}
+function fltOk(c){const f=S.flt||'all';if(f=='archived')return isArch(c);if(isArch(c))return false;
+  if(f.startsWith('f:')){const fo=folds().find(x=>'f:'+x.id==f);return!!fo&&fo.chats.includes(c)}
+  return f=='all'||(f=='unread'&&unread(c)>0)||(f=='groups'&&c[0]=='g')||(f=='direct'&&c[0]=='d')}
 function drawFlt(){const e=$('#flt');e.hidden=S.tab!='chats';if(e.hidden||!S.d)return;
   const all=[...S.d.friends.f.map(f=>dmId(f)),...S.d.groups.map(g=>'g:'+g.id)],un=all.filter(c=>unread(c)>0).length;
-  e.innerHTML=[['all','All'],['unread','Unread'+(un?`<i>${un}</i>`:'')],['groups','Groups'],['direct','Direct']].map(([k,l])=>`<button type=button data-do=flt data-v=${k} class="${S.flt==k?'on':''}">${l}</button>`).join('')}
-DO.flt=v=>{S.flt=v;drawList()};
+  e.innerHTML=[['all','All'],['unread','Unread'+(un?`<i>${un}</i>`:'')],['groups','Groups'],['direct','Direct'],...folds().map(x=>['f:'+x.id,'📁 '+esc(x.name)]),['archived','🗄 Archived'+(arch().length?` <i>${arch().length}</i>`:'')],['+new','＋ Folder']].map(([k,l])=>`<button type=button data-do=flt data-v=${k} class="${S.flt==k?'on':''}">${l}</button>`).join('')}
+DO.voice=doVoice;DO.exp=doExp;
+// ---- archive, folders, channels, scheduled messages, reports ----
+const arch=()=>{try{return JSON.parse(localStorage['ar:'+S.me]||'[]')}catch{return[]}},isArch=c=>arch().includes(c);
+const setArch=a=>{try{localStorage['ar:'+S.me]=JSON.stringify(a)}catch{}};
+const folds=()=>{try{return JSON.parse(localStorage['fo:'+S.me]||'[]')}catch{return[]}};
+const setFolds=a=>{try{localStorage['fo:'+S.me]=JSON.stringify(a)}catch{}};
+function newFold(){const n=(prompt('Folder name (for example: Work, Family)')||'').trim().slice(0,24);if(!n)return;const a=folds();a.push({id:Date.now().toString(36),name:n,chats:[]});setFolds(a);S.flt='f:'+a[a.length-1].id;draw()}
+function chanUi(){const c=S.cur,g=c&&c[0]=='g'?grp(c):null,ro=!!(g&&g.channel&&roleOf(g,S.me)=='member');const f=$('#f');if(!f)return;
+  let n=$('#chro');if(!n){n=document.createElement('div');n.id='chro';n.className='hint';n.style.cssText='padding:12px;text-align:center';f.parentNode.insertBefore(n,f)}
+  f.hidden=ro;n.hidden=!ro;n.textContent='📢 Channel: only admins can post.'}
+DO.chArch=()=>{const c=S.cur;if(!c)return;const a=arch(),i=a.indexOf(c);if(i>=0)a.splice(i,1);else a.push(c);setArch(a);closeModal();toast(i>=0?'Unarchived':'Archived');draw()};
+DO.chFold=()=>{const c=S.cur;if(!c)return;show(()=>{const a=folds();$('#box').innerHTML='<h3>Folders</h3>'+(a.length?a.map(x=>'<label class=row><input type=checkbox data-fc="'+x.id+'" '+(x.chats.includes(c)?'checked':'')+'> 📁 '+esc(x.name)+'</label>').join(''):'<p class=hint>No folders yet. Use ＋ Folder in the chat list to create one.</p>')+'<button data-do=chFoldOk>Done</button>'})};
+DO.chFoldOk=()=>{const c=S.cur,a=folds();document.querySelectorAll('[data-fc]').forEach(i=>{const f=a.find(x=>x.id==i.dataset.fc);if(!f)return;const has=f.chats.includes(c);if(i.checked&&!has)f.chats.push(c);if(!i.checked&&has)f.chats=f.chats.filter(x=>x!=c)});setFolds(a);closeModal();draw()};
+DO.schNo=()=>closeModal();
+DO.schOpen=()=>{if(!S.cur)return toast('Open a chat first');const t=$('#in').value.trim();if(!t)return toast('Type a message first, then schedule it');
+  const min=new Date(Date.now()+60000-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+  show(()=>{$('#box').innerHTML='<h3>Schedule message</h3><p class=hint>'+esc(t.slice(0,120))+'</p><label class=hint>Send at <input type=datetime-local id=schAt min="'+min+'"></label><button data-do=schSave>Schedule</button><button data-do=schNo>Cancel</button>'})};
+DO.schSave=async()=>{const v=$('#schAt')?.value,at=v?Date.parse(v):NaN,c=S.cur,t=$('#in').value.trim();if(!c||!t)return;
+  if(!(at>Date.now()+30000))return toast('Pick a time at least a minute from now');
+  const r=await api('sched',{c,t,at});if(r&&!r.err){$('#in').value='';closeModal();toast('Scheduled ✓')}};
+DO.schList=async()=>{const r=await api('schedlist',{}),L=(r&&r.items)||[];show(()=>{$('#box').innerHTML='<h3>Scheduled messages</h3>'+(L.length?L.map(x=>'<div class=it><div class=tx><b>'+esc(x.t.slice(0,60))+'</b><span>'+new Date(x.at).toLocaleString()+' · '+esc(nameOf(x.c))+'</span></div><button class=red data-do=schDel data-v="'+x.id+'">Cancel</button></div>').join(''):'<p class=hint>Nothing scheduled.</p>')})};
+DO.schDel=async v=>{await api('schedcancel',{id:v});DO.schList()};
+DO.rprt=v=>{show(()=>{$('#box').innerHTML='<h3>Report message</h3><label class=hint>Reason <select id=rsn>'+['Spam','Harassment or abuse','Scam or fraud','Violence or threats','Other'].map(x=>'<option>'+x+'</option>').join('')+'</select></label><button class=red data-do=rprtOk data-v="'+v+'">Send report</button><button data-do=schNo>Cancel</button>'})};
+DO.rprtOk=async v=>{const r=await api('report',{c:S.cur,id:+v,reason:$('#rsn').value});closeModal();toast(r&&!r.err?'Thanks, report sent':'Could not send report')};
+function showOtp(tmp){let f=$('#otpf');if(!f){f=document.createElement('form');f.id='otpf';
+    f.innerHTML='<p class=hint>Enter the 6-digit code from your authenticator app, or one of your recovery codes.</p><input id=otpc placeholder="123456" autocomplete="one-time-code" maxlength=12 autocapitalize="none"><button>Verify</button><button type=button id=otpx>Back</button>';
+    $('#af').after(f);$('#otpx').onclick=()=>{f.hidden=true;$('#af').hidden=false}}
+  f.dataset.tmp=tmp;f.hidden=false;$('#af').hidden=true;$('#otpc').focus()}
+async function otpSubmit(){const r=await api('otp',{tmp:$('#otpf').dataset.tmp,code:$('#otpc').value});if(r.err||!r.token)return;S.token=r.token;localStorage.tok=r.token;S.me=r.profiles.includes(localStorage.me)?localStorage.me:r.profiles[0];start()}
+DO.twoSetup=async()=>{const r=await api('totpSetup',{});if(r.err)return;show(()=>{$('#box').innerHTML='<h3>Two-step verification</h3><p class=hint>In Google Authenticator or a similar app, choose "Enter a setup key" and paste this key:</p><p><code>'+esc(r.secret)+'</code></p><form id=tof><input id=tc inputmode=numeric maxlength=6 placeholder="6-digit code" autocomplete="one-time-code"><button>Turn on</button></form>'})};
+F.tof=async()=>{const r=await api('totpEnable',{code:$('#tc').value});if(r.err)return;show(()=>{$('#box').innerHTML='<h3>Recovery codes</h3><p class=hint>Save these somewhere safe. Each code works once if you lose your phone. They are shown only now.</p><div class=k>'+r.codes.map(esc).join('<br>')+'</div><button data-do=schNo>Done</button>'});toast('Two-step verification is on')};
+DO.twoOff=()=>{const pw=prompt('Enter your password to turn off two-step verification');if(!pw)return;api('totpOff',{pw}).then(r=>{if(!r.err)toast('Two-step verification is off')})};
+DO.flt=v=>{if(v=='+new')return newFold();S.flt=v;drawList()};
 function svGet(){try{return JSON.parse(localStorage['sv_'+S.me]||'[]')}catch{return[]}}
 function svSet(a){try{localStorage['sv_'+S.me]=JSON.stringify(a.slice(0,300))}catch{}}
 function drawSaved(){const a=svGet();$('#flt').hidden=true;
@@ -884,7 +941,7 @@ DO.fgo=async()=>{const hide=$('#fhide').checked,cm=$('#fcm').value.trim(),ids=[.
 // --- context menu (right-click / long-press) ---
 const cx=document.createElement('div');cx.id='ctx';cx.hidden=true;document.body.appendChild(cx);
 function ctxOpen(el,x,y){const id=+el.dataset.id,c=S.cur,m=curMsgs().find(q=>q.id==id);if(!m||m.s)return;const me=m.f==S.me,st=isSt(m.t),it=(i,l,d,k='')=>`<button class="${k}" data-do="${d}" data-v="${id}"><i>${i}</i>${l}</button>`;
-  cx.innerHTML=`<div class=cxr>${['👍','❤️','😂','🔥','😮','😢'].map(e=>`<span data-do=rx data-v="${id}|${e}">${e}</span>`).join('')}</div>`+it('↩','Reply','rep')+(m.poll?'':it('⤳','Forward','fwdm'))+(m.poll||st?'':it('📋','Copy text','cpy'))+(canPin(c)?it('📌','Pin','pinm'):'')+it('⭐','Save','sav')+(me&&!st&&!m.poll?it('✏️','Edit','edt'):'')+it('☑','Select','selm')+(me||amod()?it('🗑','Delete','del','dg'):'');
+  cx.innerHTML=`<div class=cxr>${['👍','❤️','😂','🔥','😮','😢'].map(e=>`<span data-do=rx data-v="${id}|${e}">${e}</span>`).join('')}</div>`+it('↩','Reply','rep')+(m.poll?'':it('⤳','Forward','fwdm'))+(m.poll||st?'':it('📋','Copy text','cpy'))+(canPin(c)?it('📌','Pin','pinm'):'')+it('⭐','Save','sav')+(me&&!st&&!m.poll?it('✏️','Edit','edt'):'')+it('☑','Select','selm')+(me?'':it('🚩','Report','rprt'))+(me||amod()?it('🗑','Delete','del','dg'):'');
   cx.hidden=false;const w=cx.offsetWidth,h=cx.offsetHeight;cx.style.left=Math.max(8,Math.min(x,innerWidth-w-8))+'px';cx.style.top=Math.max(8,Math.min(y,innerHeight-h-8))+'px'}
 $('#msgs').addEventListener('contextmenu',e=>{const m=e.target.closest('.m[data-id]');if(!m||S.selOn||e.target.closest('a'))return;e.preventDefault();ctxOpen(m,e.clientX,e.clientY)});
 document.addEventListener('click',()=>{cx.hidden=true},true);$('#msgs').addEventListener('scroll',()=>{cx.hidden=true},{passive:true});addEventListener('resize',()=>{cx.hidden=true});
