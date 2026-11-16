@@ -42,7 +42,7 @@ const role=(g,p)=>g.owner==p?'owner':g.admins.includes(p)?'admin':'member';
 const hash=(pw,salt)=>cr.scryptSync(pw,salt,32).toString('hex');
 const nm=s=>String(s||'').trim().toLowerCase();
 const okName=s=>/^[a-z0-9_]{3,20}$/.test(s);
-const mkTok=l=>{const t=cr.randomBytes(24).toString('hex');D.tokens[t]=l;const mine=Object.keys(D.tokens).filter(k=>D.tokens[k]==l);while(mine.length>5)delete D.tokens[mine.shift()];save();return t};
+const mkTok=l=>{const t=cr.randomBytes(24).toString('hex');D.tokens[t]=l;const mine=Object.keys(D.tokens).filter(k=>D.tokens[k]==l);while(mine.length>20)delete D.tokens[mine.shift()];save();return t};
 const rm=(g,all)=>{delete D.groups[g.id];D.msgs=D.msgs.filter(m=>m.c!='g:'+g.id);save();push(all,{e:'sync'});return{}};
 
 // ---- Google sign-in (optional: active only when GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set) ----
@@ -133,10 +133,6 @@ function act(L,p,b){
   switch(b.a){
   case'addp':{const u=nm(b.u);if(!okName(u))throw'Username: 3-20 characters, a-z 0-9 _';if(D.profiles[u])throw'Username is taken';
     D.logins[L].profiles.push(u);D.profiles[u]=L;save();return{profiles:D.logins[L].profiles}}
-  case'ice':{const tu=String(process.env.TURN_URLS||'').split(',').map(s=>s.trim()).filter(Boolean);
-    const out=[{urls:'stun:stun.l.google.com:19302'}];
-    if(tu.length)out.unshift({urls:tu,username:process.env.TURN_USER||'',credential:process.env.TURN_PASS||''});
-    return{iceServers:out}}
   case'sync':return sync(p,L);
   case'voice':{const d=String(b.d||'');
     if(d.length>190000||!/^data:audio\/(webm|ogg|mp4)(;[^,]*)?;base64,[A-Za-z0-9+\/=]+$/.test(d))throw'Voice message too long or bad format';
@@ -304,6 +300,22 @@ const TERMS=`<!doctype html><html lang=en><meta charset=utf-8><meta name=viewpor
 const MANIFEST=JSON.stringify({name:'Chatly',short_name:'Chatly',start_url:'/',display:'standalone',background_color:'#0e1621',theme_color:'#17212b',
   icons:[{src:'/icon-192.png',sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:'/icon-512.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}]});
 const SW="self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));self.addEventListener('fetch',()=>{});";
+// ---- TURN/STUN config for calls ----
+// Option A (Cloudflare Realtime TURN, temporary credentials): CF_TURN_KEY_ID + CF_TURN_TOKEN
+// Option B (fixed credentials from any TURN provider): TURN_URLS + TURN_USER + TURN_PASS
+const ICE_STUN={urls:'stun:stun.l.google.com:19302'};
+let ICECACHE={at:0,v:null};
+async function iceCfg(){
+  const CFK=process.env.CF_TURN_KEY_ID||'',CFT=process.env.CF_TURN_TOKEN||'';
+  if(CFK&&CFT){
+    if(ICECACHE.v&&Date.now()-ICECACHE.at<3600000)return ICECACHE.v;
+    try{const r=await fetch('https://rtc.live.cloudflare.com/v1/turn/keys/'+encodeURIComponent(CFK)+'/credentials/generate-ice-servers',{method:'POST',headers:{Authorization:'Bearer '+CFT,'Content-Type':'application/json'},body:JSON.stringify({ttl:86400})});
+      const j=await r.json();if(!j||!j.iceServers)throw new Error('no iceServers in reply');
+      const v={iceServers:[].concat(j.iceServers,ICE_STUN)};ICECACHE={at:Date.now(),v};return v}
+    catch(e){console.error('TURN credentials failed, using STUN only:',e.message);return{iceServers:[ICE_STUN]}}}
+  const tu=String(process.env.TURN_URLS||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(tu.length)return{iceServers:[{urls:tu,username:process.env.TURN_USER||'',credential:process.env.TURN_PASS||''},ICE_STUN]};
+  return{iceServers:[ICE_STUN]}}
 const srv=http.createServer((q,s)=>{
   const u=new URL(q.url,'http://x');
   if(u.pathname=='/events'){const L=D.tokens[u.searchParams.get('token')];
@@ -328,6 +340,7 @@ const srv=http.createServer((q,s)=>{
     q.on('end',async()=>{let r;const ip=(q.headers['x-forwarded-for']||q.socket.remoteAddress||'').split(',')[0].trim();
       try{const b=JSON.parse(d);
         if((b.a=='reg'||b.a=='login'||b.a=='otp'||b.a=='pwreset')&&limited(ip))throw'Too many attempts. Try again in a few minutes.';if(b.a=='reg')r=reg(b);else if(b.a=='login')r=login(b);else if(b.a=='otp')r=otpLogin(b);else if(b.a=='pwreset')r=pwReset(b);else if(b.a=='gexch')r=gexch(b);else if(b.a=='gifs'){if(!D.tokens[b.token])throw'AUTH';r=await gifs(b)}
+        else if(b.a=='ice'){if(!D.tokens[b.token])throw'AUTH';r=await iceCfg()}
         else{const L=D.tokens[b.token];if(!L)throw'AUTH';
           if(b.a!='addp'&&!D.logins[L].profiles.includes(b.as))throw'Bad profile';
           r=act(L,b.as,b)}}
